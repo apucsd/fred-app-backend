@@ -7,6 +7,7 @@ import { UserRouters } from '../modules/user/user.routes';
 import { packageRouters } from '../modules/package/package.route';
 import { FaqRouters } from '../modules/faq/faq.route';
 import { InfoContentRouters } from '../modules/info-content/info-content.route';
+import { SupportTicketRouters } from '../modules/support-ticket/support-ticket.route';
 const router = express.Router();
 
 const moduleRoutes = [
@@ -41,6 +42,10 @@ const moduleRoutes = [
     {
         path: '/info-contents',
         route: InfoContentRouters,
+    },
+    {
+        path: '/support-tickets',
+        route: SupportTicketRouters,
     },
 ];
 

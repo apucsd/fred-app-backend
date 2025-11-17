@@ -1,0 +1,20 @@
+model SupportTicket {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  subject   String
+  message   String
+  status    TicketStatus @default(OPEN)
+  response  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation("SupportTickets", fields: [userId], references: [id])
+
+  @@map("support_tickets")
+}
+
+enum TicketStatus {
+  OPEN
+  RESOLVED
+  CLOSED
+}
