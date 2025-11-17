@@ -18,7 +18,7 @@ const getAllEventsFromDB = async () => {
 };
 
 const getEventByIdFromDB = async (id: string) => {
-    const result = await prisma.event.findUnique({
+    const result = await prisma.event.findUniqueOrThrow({
         where: {
             id,
         },

@@ -43,8 +43,10 @@ const getEventById = catchAsync(async (req, res) => {
 });
 
 const updateEvent = catchAsync(async (req, res) => {
-    if (req.file && req.file.filename) {
-        req.body.image = req.file.filename;
+    if (req.file) {
+        const location = uploadSingleFile(req.file);
+        req.body.userId = req.user.id;
+        req.body.image = location.url;
     }
     const result = await EventService.updateEventInDB(req.params.id, req.body);
     sendResponse(res, {

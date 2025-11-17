@@ -14,12 +14,12 @@ router.post(
     auth(UserRoleEnum.BUSINESS),
     upload.single('image'),
     parseBody,
-    // validateRequest.body(EventValidation.createEventSchema),
+    validateRequest.body(EventValidation.createEventSchema),
     EventController.createEvent
 );
 router.get('/', auth('ANY'), EventController.getAllEvents);
 router.get('/:id', auth('ANY'), EventController.getEventById);
-router.put('/:id', auth(UserRoleEnum.BUSINESS), upload.single('image'), EventController.updateEvent);
+router.patch('/:id', auth(UserRoleEnum.BUSINESS), upload.single('image'), parseBody, EventController.updateEvent);
 router.delete('/:id', auth(UserRoleEnum.BUSINESS), EventController.deleteEvent);
 
 export const EventRouters = router;
