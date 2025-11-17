@@ -5,6 +5,7 @@ import { AuthRouters } from '../modules/auth/auth.routes';
 import { AssetRouters } from '../modules/asset/asset.route';
 import { UserRouters } from '../modules/user/user.routes';
 import { packageRouters } from '../modules/package/package.route';
+import { FaqRouters } from '../modules/faq/faq.route';
 const router = express.Router();
 
 const moduleRoutes = [
@@ -31,6 +32,10 @@ const moduleRoutes = [
     {
         path: '/packages',
         route: packageRouters,
+    },
+    {
+        path: '/faqs',
+        route: FaqRouters,
     },
 ];
 

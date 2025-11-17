@@ -3,24 +3,25 @@ import { packageControllers } from './package.controller';
 import auth from '../../middlewares/auth';
 import validateRequest from '../../middlewares/validateRequest';
 import { packageValidation } from './package.validation';
+import { UserRoleEnum } from '@prisma/client';
 
 const router = Router();
 
 router.post(
     '/',
-    auth('SUPERADMIN'),
+    auth(UserRoleEnum.SUPERADMIN),
     validateRequest.body(packageValidation.packageValidationSchema),
     packageControllers.createPackage
 );
-router.get('/all', auth('SUPERADMIN'), packageControllers.getAllPackagesForAdmin);
+router.get('/all', auth(UserRoleEnum.SUPERADMIN), packageControllers.getAllPackagesForAdmin);
 router.get('/:id', auth('ANY'), packageControllers.getPackageById);
-router.get('/', auth('BUSINESS', 'USER'), packageControllers.getAllPackages);
+router.get('/', auth(UserRoleEnum.BUSINESS, UserRoleEnum.USER), packageControllers.getAllPackages);
 router.patch(
     '/:id',
-    auth('SUPERADMIN'),
+    auth(UserRoleEnum.SUPERADMIN),
     validateRequest.body(packageValidation.updatePackageValidationSchema),
     packageControllers.updatePackage
 );
-router.delete('/:id', auth('SUPERADMIN'), packageControllers.deletePackage);
+router.delete('/:id', auth(UserRoleEnum.SUPERADMIN), packageControllers.deletePackage);
 
 export const packageRouters = router;
