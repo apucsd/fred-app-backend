@@ -28,6 +28,8 @@ model User {
   notifications    NotificationUser[]
   supportTickets   SupportTicket[]    @relation("SupportTickets")
 
+  events Event[] @relation("events")
+
   @@map("users")
 }
 

@@ -8,6 +8,7 @@ import { packageRouters } from '../modules/package/package.route';
 import { FaqRouters } from '../modules/faq/faq.route';
 import { InfoContentRouters } from '../modules/info-content/info-content.route';
 import { SupportTicketRouters } from '../modules/support-ticket/support-ticket.route';
+import { EventRouters } from '../modules/event/event.route';
 const router = express.Router();
 
 const moduleRoutes = [
@@ -31,6 +32,10 @@ const moduleRoutes = [
     //     path: '/assets',
     //     route: AssetRouters,
     // },
+    {
+        path: '/events',
+        route: EventRouters,
+    },
     {
         path: '/packages',
         route: packageRouters,

@@ -1,0 +1,17 @@
+model Event {
+    id String @id @default(auto()) @map("_id") @db.ObjectId
+    userId String
+    title String  
+    description String
+    location String
+    eventDate DateTime
+    price Float 
+    image String
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+  
+    user User @relation("events", fields: [userId], references: [id])
+
+
+    @@map("events")
+}
