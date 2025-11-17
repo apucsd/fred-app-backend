@@ -17,11 +17,8 @@ const loginUser = z.object({
 
 const registerUser = z.object({
     body: z.object({
-        firstName: z.string({
-            required_error: 'First Name is required!',
-        }),
-        lastName: z.string({
-            required_error: 'Last Name is required!',
+        name: z.string({
+            required_error: 'Full Name is required!',
         }),
         email: z
             .string({
@@ -30,7 +27,11 @@ const registerUser = z.object({
             .email({
                 message: 'Invalid email format!',
             }),
-        phoneNumber: z.string({ required_error: 'Phone Number is required' }),
+        dateOfBirth: z
+            .string({
+                required_error: 'Date of Birth is required!',
+            })
+            .datetime(),
         isAgreeWithTerms: z.boolean().refine((val) => val === true, {
             message: 'You must agree to the terms',
         }),

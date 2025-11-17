@@ -1,16 +1,15 @@
 export const userSelect = {
-  id: true,
-  firstName: true,
-  lastName: true,
-  email: true,
-  role: true,
-  status: true,
-  isEmailVerified: true,
-  createdAt: true,
+    id: true,
+    name: true,
+    email: true,
+    role: true,
+    status: true,
+    isEmailVerified: true,
+    createdAt: true,
 };
 
 export const verifyEmailHTML = (link: string) => {
-  return `
+    return `
   <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -86,7 +85,7 @@ export const verifyEmailHTML = (link: string) => {
 };
 
 export const successEmailVerificationHTML = () => {
-  return `
+    return `
       <!DOCTYPE html>
       <html lang="en">
       <head>
@@ -138,7 +137,7 @@ export const successEmailVerificationHTML = () => {
 };
 
 export const failedEmailVerificationHTML = (client_server: string) => {
-  return `
+    return `
           <!DOCTYPE html>
     <html lang="en">
     <head>

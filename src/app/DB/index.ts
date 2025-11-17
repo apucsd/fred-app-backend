@@ -4,10 +4,10 @@ import config from '../../config';
 import { prisma } from '../utils/prisma';
 
 const superAdminData = {
-    firstName: 'Super',
-    lastName: 'Admin',
+    name: 'Super Admin',
     email: 'admin@gmail.com',
     password: '123456',
+    dateOfBirth: '2000-01-01T00:00:00.000Z',
     phoneNumber: '01821558090',
     role: UserRoleEnum.SUPERADMIN,
     isAgreeWithTerms: true,

@@ -1,13 +1,12 @@
 import httpStatus from 'http-status';
 import AppError from '../../errors/AppError';
-import { prisma }  from '../../utils/prisma';
+import { prisma } from '../../utils/prisma';
 import { Message } from '@prisma/client';
 import { getSocket } from '../../utils/socket';
 
-
 const sendMessage = async (senderId: string, payload: Message) => {
-    const time = new Date()
-    payload.senderId = senderId
+    const time = new Date();
+    payload.senderId = senderId;
 
     const message = await prisma.message.create({
         data: {
@@ -15,7 +14,7 @@ const sendMessage = async (senderId: string, payload: Message) => {
             receiverId: payload.receiverId,
             content: payload.content,
             fileUrls: payload.fileUrls,
-            createdAt: time
+            createdAt: time,
         },
     });
     const io = getSocket();
@@ -25,7 +24,7 @@ const sendMessage = async (senderId: string, payload: Message) => {
 };
 
 const getConversation = async (me: string, other: string) => {
-    await prisma.user.findUniqueOrThrow({ where: { id: other } })
+    await prisma.user.findUniqueOrThrow({ where: { id: other } });
 
     const messages = await prisma.message.findMany({
         where: {
@@ -41,80 +40,70 @@ const getConversation = async (me: string, other: string) => {
 };
 
 const getAllConversationUsers = async (userId: string) => {
-  const result = await prisma.$runCommandRaw({
-    aggregate: 'messages',
-    pipeline: [
-      {
-        $match: {
-          $or: [
-            { senderId: { $oid: userId } },
-            { receiverId: { $oid: userId } },
-          ],
-        },
-
-      },
-      {
-        $sort: { createdAt: -1 }
-      },
-      {
-        $project: {
-          otherUser: {
-            $cond: [
-              { $eq: ["$senderId", { $oid: userId }] },
-              "$receiverId",
-              "$senderId"
-            ]
-          },
-          content: 1,
-          createdAt: 1
-        }
-      },
-      {
-        $group: {
-          _id: "$otherUser",
-          lastMessageAt: { $first: "$createdAt" },
-          lastMessage: { $first: "$content" },
-          lastFiles: { $first: "$fileUrls" },
-        }
-      },
-      {
-        $lookup: {
-          from: 'users',
-          localField: "_id",
-          foreignField: "_id",
-          as: "userData"
-        }
-      },
-      {
-        $unwind: "$userData"
-      },
-      {
-        $project: {
-          _id: "$userData._id",
-          firstName: "$userData.firstName",
-          lastName: "$userData.lastName",
-          profile: "$userData.profile",
-          email: "$userData.email",
-          lastMessage: 1,
-          lastMessageAt: 1
-        }
-      },
-      { $sort: { lastMessageAt: -1 } }
-    ],
-    cursor: {}
-  })
-  const convertedData = (result?.cursor as { firstBatch: any[] })?.firstBatch?.map(item => {
-    const newData = {
-      ...item,
-      id: item?._id?.$oid,
-      lastMessageAt: item.lastMessageAt.$date
-
-    };
-    delete newData._id;
-    return newData
-  })
-  return convertedData
-}
+    const result = await prisma.$runCommandRaw({
+        aggregate: 'messages',
+        pipeline: [
+            {
+                $match: {
+                    $or: [{ senderId: { $oid: userId } }, { receiverId: { $oid: userId } }],
+                },
+            },
+            {
+                $sort: { createdAt: -1 },
+            },
+            {
+                $project: {
+                    otherUser: {
+                        $cond: [{ $eq: ['$senderId', { $oid: userId }] }, '$receiverId', '$senderId'],
+                    },
+                    content: 1,
+                    createdAt: 1,
+                },
+            },
+            {
+                $group: {
+                    _id: '$otherUser',
+                    lastMessageAt: { $first: '$createdAt' },
+                    lastMessage: { $first: '$content' },
+                    lastFiles: { $first: '$fileUrls' },
+                },
+            },
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: '_id',
+                    foreignField: '_id',
+                    as: 'userData',
+                },
+            },
+            {
+                $unwind: '$userData',
+            },
+            {
+                $project: {
+                    _id: '$userData._id',
+                    name: '$userData.name',
+                    profile: '$userData.profile',
+                    email: '$userData.email',
+                    lastMessage: 1,
+                    lastMessageAt: 1,
+                },
+            },
+            { $sort: { lastMessageAt: -1 } },
+        ],
+        cursor: {},
+    });
+    const convertedData = (result?.cursor as { firstBatch: any[] })?.firstBatch?.map((item) => {
+        const newData = {
+            ...item,
+            id: item?._id?.$oid,
+            lastMessageAt: item.lastMessageAt.$date,
+        };
+        delete newData._id;
+        return newData;
+    });
+    return convertedData;
+};
 
 const markMessageAsRead = async (messageId: string, userId: string) => {
     const message = await prisma.message.findUniqueOrThrow({
@@ -154,5 +143,5 @@ export const MessageServices = {
     getConversation,
     markMessageAsRead,
     deleteMessage,
-    getAllConversationUsers
+    getAllConversationUsers,
 };

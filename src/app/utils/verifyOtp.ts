@@ -1,6 +1,6 @@
-import httpStatus from "http-status";
-import AppError from "../errors/AppError";
-import { prisma } from "./prisma";
+import httpStatus from 'http-status';
+import AppError from '../errors/AppError';
+import { prisma } from './prisma';
 
 export const verifyOtp = async (payload: { email: string; otp: string }) => {
     const userData = await prisma.user.findFirstOrThrow({
@@ -11,11 +11,10 @@ export const verifyOtp = async (payload: { email: string; otp: string }) => {
             otp: true,
             otpExpiry: true,
             id: true,
-            firstName: true,
-            lastName: true,
+            name: true,
             email: true,
-            role: true
-        }
+            role: true,
+        },
     });
 
     if (!userData.otp || !userData.otpExpiry) {
@@ -31,6 +30,6 @@ export const verifyOtp = async (payload: { email: string; otp: string }) => {
     }
     return {
         verified: true,
-        userData
-    }
+        userData,
+    };
 };

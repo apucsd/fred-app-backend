@@ -12,7 +12,6 @@ const loginUser = catchAsync(async (req, res) => {
             data: result,
         });
     }
-    // If result is undefined, response is already sent by service (verification email case)
 });
 
 const registerUser = catchAsync(async (req, res) => {

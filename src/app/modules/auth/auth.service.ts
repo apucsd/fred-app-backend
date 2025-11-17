@@ -35,7 +35,7 @@ const loginUserFromDB = async (
         const verificationToken = generateToken(
             {
                 id: 'email-verification-token',
-                name: userData.firstName + ' ' + userData.lastName,
+                name: userData.name,
                 email: userData.email,
                 role: userData.role,
             },
@@ -67,7 +67,7 @@ const loginUserFromDB = async (
         const accessToken = await generateToken(
             {
                 id: userData.id,
-                name: userData.firstName + ' ' + userData.lastName,
+                name: userData.name,
                 email: userData.email,
                 role: userData.role,
             },
@@ -77,7 +77,7 @@ const loginUserFromDB = async (
 
         return {
             id: userData.id,
-            name: userData.firstName + ' ' + userData.lastName,
+            name: userData.name,
             email: userData.email,
             role: userData.role,
             accessToken: accessToken,
@@ -90,26 +90,25 @@ const registerUserIntoDB = async (payload: User) => {
 
     const isUserExistWithTheGmail = await prisma.user.findFirst({
         where: {
-            OR: [{ email: payload.email }, { phoneNumber: payload.phoneNumber }],
+            OR: [{ email: payload.email }],
         },
         select: {
             id: true,
             email: true,
-            phoneNumber: true,
         },
     });
 
     if (isUserExistWithTheGmail?.email === payload.email) {
         throw new AppError(httpStatus.CONFLICT, 'User already exists with the email');
     }
-    if (isUserExistWithTheGmail?.phoneNumber === payload.phoneNumber) {
-        throw new AppError(httpStatus.CONFLICT, 'User already exists with the Phone Number');
-    }
+    // if (isUserExistWithTheGmail?.phoneNumber === payload.phoneNumber) {
+    //     throw new AppError(httpStatus.CONFLICT, 'User already exists with the Phone Number');
+    // }
 
     const verificationToken = generateToken(
         {
             id: 'email-verification-token',
-            name: payload.firstName + ' ' + payload.lastName,
+            name: payload.name,
             email: payload.email,
             role: payload.role,
         },
@@ -186,7 +185,7 @@ const verifyEmail = async (payload: { token: string }) => {
     const accessToken = await generateToken(
         {
             id: user.id,
-            name: user.firstName + ' ' + user.lastName,
+            name: user.name,
             email: user.email,
             role: user.role,
         },
@@ -196,7 +195,7 @@ const verifyEmail = async (payload: { token: string }) => {
 
     return {
         id: user.id,
-        name: user.firstName + ' ' + user.lastName,
+        name: user.name,
         email: user.email,
         role: user.role,
         accessToken: accessToken,
@@ -249,7 +248,7 @@ const resendUserVerificationEmail = async (email: string) => {
     const verificationToken = generateToken(
         {
             id: 'email-verification-token',
-            name: user.firstName + ' ' + user.lastName,
+            name: user.name,
             email: user.email,
             role: user.role,
         },
@@ -284,8 +283,7 @@ const forgetPassword = async (email: string) => {
         select: {
             status: true,
             id: true,
-            firstName: true,
-            lastName: true,
+            name: true,
             role: true,
             emailVerificationTokenExpires: true,
         },
@@ -298,7 +296,7 @@ const forgetPassword = async (email: string) => {
     const resetToken = generateToken(
         {
             id: 'password-reset-token',
-            name: userData.firstName + ' ' + userData.lastName,
+            name: userData.name,
             email: email,
             role: userData.role,
         },
