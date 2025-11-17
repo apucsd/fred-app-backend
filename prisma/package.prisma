@@ -1,0 +1,27 @@
+model Package {
+  id          String       @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String
+  features    String[]
+  price       Float
+  type        UserRoleEnum
+  interval    PackageInterval
+  currency    Currency      @default(usd)
+  stripeProductId String
+  stripePriceId String
+  status      PackageStatus @default(ACTIVE)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@map("packages")
+}
+
+enum PackageStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum PackageInterval {
+  month
+  year
+  }
