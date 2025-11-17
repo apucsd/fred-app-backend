@@ -1,3 +1,4 @@
+import QueryBuilder from '../../builder/QueryBuilder';
 import { prisma } from '../../utils/prisma';
 import { IFaq } from './faq.interface';
 
@@ -8,8 +9,16 @@ const createFaqIntoDB = async (faq: IFaq) => {
     return result;
 };
 
-const getFaqsFromDB = async () => {
-    const result = await prisma.faq.findMany();
+const getFaqsFromDB = async (query: Record<string, any>) => {
+    const faqQuery = new QueryBuilder(prisma.faq, query);
+    const result = await faqQuery
+        .search(['question', 'answer'])
+        .sort()
+        .filter()
+        .fields()
+        .exclude()
+        .paginate()
+        .execute();
     return result;
 };
 
