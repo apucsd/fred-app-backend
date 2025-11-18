@@ -51,6 +51,16 @@ export const uploadMultipleFilesToDigitalOceanAWS = async (files: Express.Multer
     }
 };
 
+export const deleteMultipleFilesFromDigitalOceanAWS = async (fileUrls: string[]): Promise<void> => {
+    try {
+        const deletePromises = fileUrls.map((fileUrl) => deleteFromDigitalOceanAWS(fileUrl));
+        await Promise.all(deletePromises);
+    } catch (error) {
+        console.error(`Error deleting files`, error);
+        throw error;
+    }
+};
+
 export const deleteFromDigitalOceanAWS = async (fileUrl: string): Promise<void> => {
     try {
         const key = fileUrl.replace(`${endpoints}/${bucket}/`, '');

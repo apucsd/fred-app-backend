@@ -13,6 +13,22 @@ const createProduct = catchAsync(async (req, res) => {
     });
 });
 
+const updateProduct = catchAsync(async (req, res) => {
+    const { removeImages, ...rest } = req.body;
+    const result = await ProductService.updateProductInDB(
+        req.params.id,
+        removeImages,
+        rest,
+        req.files as Express.Multer.File[]
+    );
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Product updated successfully',
+        data: result,
+    });
+});
+
 const getAllProducts = catchAsync(async (req, res) => {
     const result = await ProductService.getAllProductsFromDB(req.query);
     sendResponse(res, {
@@ -48,4 +64,5 @@ export const ProductController = {
     getAllProducts,
     getSingleProduct,
     deleteProduct,
+    updateProduct,
 };

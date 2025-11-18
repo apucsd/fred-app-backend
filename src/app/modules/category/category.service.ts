@@ -10,7 +10,7 @@ const createCategoryInDB = async (payload: ICategory) => {
 };
 
 const getAllCategoriesFromDB = async (query: Record<string, any>) => {
-    const categoryQuery = new QueryBuilder(prisma.category, query);
+    const categoryQuery = new QueryBuilder(prisma.category, { ...query, status: 'ACTIVE' });
     const result = await categoryQuery.search(['title']).sort().filter().fields().paginate().execute();
     return result;
 };
@@ -19,6 +19,7 @@ const getCategoryByIdFromDB = async (id: string) => {
     const result = await prisma.category.findUnique({
         where: {
             id,
+            status: 'ACTIVE',
         },
     });
     return result;
@@ -28,6 +29,7 @@ const updateCategoryInDB = async (id: string, payload: Partial<ICategory>) => {
     const result = await prisma.category.update({
         where: {
             id,
+            status: 'ACTIVE',
         },
         data: payload,
     });
@@ -35,9 +37,12 @@ const updateCategoryInDB = async (id: string, payload: Partial<ICategory>) => {
 };
 
 const deleteCategoryFromDB = async (id: string) => {
-    const result = await prisma.category.delete({
+    const result = await prisma.category.update({
         where: {
             id,
+        },
+        data: {
+            status: 'INACTIVE',
         },
     });
     return result;

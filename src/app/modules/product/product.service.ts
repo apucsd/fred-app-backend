@@ -1,7 +1,10 @@
 import QueryBuilder from '../../builder/QueryBuilder';
 import AppError from '../../errors/AppError';
 import { prisma } from '../../utils/prisma';
-import { uploadMultipleFilesToDigitalOceanAWS } from '../../utils/uploadToDigitalOceanAWS';
+import {
+    deleteMultipleFilesFromDigitalOceanAWS,
+    uploadMultipleFilesToDigitalOceanAWS,
+} from '../../utils/uploadToDigitalOceanAWS';
 import { IProduct } from './product.interface';
 import httpStatus from 'http-status';
 
@@ -22,6 +25,42 @@ const createProductInDB = async (product: IProduct, files: Express.Multer.File[]
     return result;
 };
 
+const updateProductInDB = async (
+    id: string,
+    removeImages: string[] = [],
+    payload: Partial<IProduct>,
+    files: Express.Multer.File[] = []
+) => {
+    const existing = await prisma.product.findUnique({
+        where: { id, status: 'ACTIVE' },
+    });
+
+    if (!existing) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Product not found');
+    }
+
+    const imagesToKeep = existing.images.filter((img) => !removeImages.includes(img));
+
+    const uploadResults = files.length ? await uploadMultipleFilesToDigitalOceanAWS(files) : [];
+    const newImageUrls = uploadResults.map((r) => r.Location);
+
+    const finalImages = [...imagesToKeep, ...newImageUrls];
+
+    const result = await prisma.product.update({
+        where: { id, status: 'ACTIVE' },
+        data: {
+            ...payload,
+            images: finalImages,
+        },
+    });
+
+    const imagesToDelete = existing.images.filter((img) => removeImages.includes(img));
+    if (imagesToDelete.length) {
+        await deleteMultipleFilesFromDigitalOceanAWS(imagesToDelete);
+    }
+
+    return result;
+};
 const getAllProductsFromDB = async (query: Record<string, any>) => {
     const productQuery = new QueryBuilder(prisma.product, { ...query, status: 'ACTIVE' });
     const result = await productQuery
@@ -69,4 +108,5 @@ export const ProductService = {
     getAllProductsFromDB,
     getSingleProductFromDB,
     deleteProductFromDB,
+    updateProductInDB,
 };
