@@ -1,7 +1,15 @@
+import AppError from '../../errors/AppError';
 import { prisma } from '../../utils/prisma';
+import { deleteFromDigitalOceanAWS, uploadToDigitalOceanAWS } from '../../utils/uploadToDigitalOceanAWS';
 import { IEvent } from './event.interface';
+import httpStatus from 'http-status';
 
-const createEventInDB = async (event: IEvent) => {
+const createEventInDB = async (event: IEvent, file: Express.Multer.File) => {
+    if (file && file.fieldname !== 'image') {
+        throw new AppError(httpStatus.BAD_REQUEST, 'Image is required');
+    }
+    const { Location } = await uploadToDigitalOceanAWS(file);
+    event.image = Location;
     const result = await prisma.event.create({
         data: event,
     });
@@ -22,11 +30,28 @@ const getEventByIdFromDB = async (id: string) => {
         where: {
             id,
         },
+        include: {
+            user: true,
+        },
     });
     return result;
 };
 
-const updateEventInDB = async (id: string, event: IEvent) => {
+const updateEventInDB = async (id: string, event: IEvent, file: Express.Multer.File) => {
+    const existingEvent = await prisma.event.findUnique({
+        where: {
+            id,
+        },
+    });
+    if (!existingEvent) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Event not found');
+    }
+
+    if (file && file.fieldname == 'image') {
+        const { Location } = await uploadToDigitalOceanAWS(file);
+        await deleteFromDigitalOceanAWS(existingEvent.image);
+        event.image = Location;
+    }
     const result = await prisma.event.update({
         where: {
             id,
@@ -42,6 +67,9 @@ const deleteEventInDB = async (id: string) => {
             id,
         },
     });
+    if (result.image) {
+        await deleteFromDigitalOceanAWS(result.image);
+    }
     return result;
 };
 
