@@ -8,7 +8,7 @@ import { userValidation } from './user.validation';
 
 const router = express.Router();
 
-router.get('/', auth('ANY'), UserControllers.getAllUsers); // todo: it should be for admin
+router.get('/', auth('ANY'), UserControllers.getAllUsers);
 router.get('/me', auth('ANY'), UserControllers.getMyProfile);
 router.get('/:id', auth('ANY'), UserControllers.getUserDetails);
 
@@ -20,7 +20,7 @@ router.put(
     UserControllers.updateMyProfile
 );
 
-router.put('/update-profile-image', auth('ANY'), upload.single('file'), UserControllers.updateProfileImage);
+router.put('/update-profile-image', auth('ANY'), upload.single('image'), UserControllers.updateProfileImage);
 
 router.put(
     '/user-role/:id',

@@ -54,9 +54,8 @@ const updateMyProfile = catchAsync(async (req: Request, res) => {
 const updateProfileImage = catchAsync(async (req: Request, res) => {
     const id = req.user.id;
     const file = req.file;
-    const previousImg = req.user.profile || '';
 
-    const result = await UserServices.updateProfileImg(id, previousImg, req, file);
+    const result = await UserServices.updateProfileImg(id, file as Express.Multer.File);
 
     sendResponse(res, {
         statusCode: httpStatus.OK,

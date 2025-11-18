@@ -2,9 +2,8 @@ import httpStatus from 'http-status';
 import { User, UserRoleEnum, UserStatus } from '@prisma/client';
 import QueryBuilder from '../../builder/QueryBuilder';
 import { prisma } from '../../utils/prisma';
-import { deleteFile, uploadSingleFile } from '../../utils/uploadFiles';
-import { Request } from 'express';
 import AppError from '../../errors/AppError';
+import { uploadToDigitalOceanAWS } from '../../utils/uploadToDigitalOceanAWS';
 
 // interface UserWithOptionalPassword extends Omit<User, 'password'> {
 //   password?: string;
@@ -42,29 +41,21 @@ const getUserDetailsFromDB = async (id: string) => {
     return user;
 };
 
-const updateProfileImg = async (
-    id: string,
-    previousImg: string,
-    req: Request,
-    file: Express.Multer.File | undefined
-) => {
-    if (file) {
-        const location = uploadSingleFile(file);
-        const result = await prisma.user.update({
-            where: {
-                id,
-            },
-            data: {
-                profile: location.url,
-            },
-        });
-        if (previousImg) {
-            deleteFile(previousImg);
-        }
-        req.user.profile = location;
-        return result;
+const updateProfileImg = async (id: string, file: Express.Multer.File | undefined) => {
+    if (!file || file.fieldname !== 'image') {
+        throw new AppError(httpStatus.NOT_FOUND, 'Please provide image');
     }
-    throw new AppError(httpStatus.NOT_FOUND, 'Please provide image');
+
+    const { Location } = await uploadToDigitalOceanAWS(file);
+    const result = await prisma.user.update({
+        where: {
+            id,
+        },
+        data: {
+            profile: Location,
+        },
+    });
+    return result;
 };
 
 const updateMyProfileIntoDB = async (

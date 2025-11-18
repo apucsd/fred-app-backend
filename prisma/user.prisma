@@ -13,7 +13,7 @@ model User {
   location String?
 
   isAgreeWithTerms Boolean
-  profile          String?
+  profile          String? @default("https://i.pinimg.com/736x/01/4e/f2/014ef2f860e8e56b27d4a3267e0a193a.jpg")
   otp              String?
   otpExpiry        DateTime?
 
