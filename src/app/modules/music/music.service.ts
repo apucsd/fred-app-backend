@@ -63,6 +63,7 @@ const updateMusicInDB = async (id: string, payload: Partial<IMusic>) => {
 };
 
 const deleteMusicInDB = async (id: string) => {
+    // find music by id
     const music = await prisma.music.findUnique({
         where: {
             id,
