@@ -78,7 +78,7 @@ const getAllProductsFromDB = async (query: Record<string, any>) => {
 };
 
 const getSingleProductFromDB = async (id: string) => {
-    const result = await prisma.product.findUnique({
+    const result = await prisma.product.findUniqueOrThrow({
         where: {
             id,
             status: 'ACTIVE',
