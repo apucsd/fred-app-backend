@@ -10,6 +10,7 @@ import { InfoContentRouters } from '../modules/info-content/info-content.route';
 import { SupportTicketRouters } from '../modules/support-ticket/support-ticket.route';
 import { EventRouters } from '../modules/event/event.route';
 import { MusicRouters } from '../modules/music/music.route';
+import { CategoryRouters } from '../modules/category/category.route';
 const router = express.Router();
 
 const moduleRoutes = [
@@ -33,6 +34,10 @@ const moduleRoutes = [
     //     path: '/assets',
     //     route: AssetRouters,
     // },
+    {
+        path: '/categories',
+        route: CategoryRouters,
+    },
     {
         path: '/events',
         route: EventRouters,
