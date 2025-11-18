@@ -1,3 +1,4 @@
+import QueryBuilder from '../../builder/QueryBuilder';
 import AppError from '../../errors/AppError';
 import { prisma } from '../../utils/prisma';
 import { deleteFromDigitalOceanAWS, uploadToDigitalOceanAWS } from '../../utils/uploadToDigitalOceanAWS';
@@ -16,12 +17,16 @@ const createEventInDB = async (event: IEvent, file: Express.Multer.File) => {
     return result;
 };
 
-const getAllEventsFromDB = async () => {
-    const result = await prisma.event.findMany({
-        include: {
-            user: true,
-        },
-    });
+const getAllEventsFromDB = async (query: Record<string, any>) => {
+    const musicQuery = new QueryBuilder(prisma.event, query);
+    const result = await musicQuery
+        .search(['title', 'description'])
+        .include({ user: true })
+        .sort()
+        .filter()
+        .fields()
+        .paginate()
+        .execute();
     return result;
 };
 
