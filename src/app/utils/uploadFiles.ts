@@ -8,7 +8,9 @@ const nodeEnv = config.env as 'development' | 'production';
 const getSubFolder = (mimetype: string): string => {
     if (mimetype.startsWith('image/')) return 'images';
     if (mimetype.startsWith('video/')) return 'videos';
+    if (mimetype.startsWith('audio/')) return 'audios';
     if (mimetype === 'application/pdf') return 'pdfs';
+
     if (
         mimetype === 'application/msword' ||
         mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'

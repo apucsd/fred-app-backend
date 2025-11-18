@@ -1,0 +1,19 @@
+model Music {
+    id String @id @default(auto()) @map("_id") @db.ObjectId
+    userId String @db.ObjectId
+    title String
+    artist String?
+    subtitle   String 
+    album String?
+    genre String?
+    image String
+    audio String
+    releaseDate DateTime?
+    duration Float?
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    
+    user User @relation("Music", fields: [userId], references: [id])
+
+    @@map("music") 
+}
