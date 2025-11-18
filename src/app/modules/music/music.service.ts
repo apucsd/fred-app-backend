@@ -28,7 +28,7 @@ const createMusicInDB = async (music: IMusic, files: Express.Multer.File[]) => {
 const getAllMusicFromDB = async (query: Record<string, any>) => {
     const musicQuery = new QueryBuilder(prisma.music, query);
     const result = await musicQuery
-        .search(['title', 'subtitle', 'author'])
+        .search(['title', 'subtitle', 'artist'])
         .include({ user: true })
         .sort()
         .filter()
