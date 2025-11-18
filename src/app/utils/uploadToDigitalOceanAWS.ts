@@ -40,6 +40,17 @@ export const uploadToDigitalOceanAWS = async (file: Express.Multer.File): Promis
     }
 };
 
+export const uploadMultipleFilesToDigitalOceanAWS = async (files: Express.Multer.File[]): Promise<UploadResponse[]> => {
+    try {
+        const uploadPromises = files.map((file) => uploadToDigitalOceanAWS(file));
+        const results = await Promise.all(uploadPromises);
+        return results;
+    } catch (error) {
+        console.error(`Error uploading files`, error);
+        throw error;
+    }
+};
+
 export const deleteFromDigitalOceanAWS = async (fileUrl: string): Promise<void> => {
     try {
         const key = fileUrl.replace(`${endpoints}/${bucket}/`, '');

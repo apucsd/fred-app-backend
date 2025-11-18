@@ -11,6 +11,7 @@ import { SupportTicketRouters } from '../modules/support-ticket/support-ticket.r
 import { EventRouters } from '../modules/event/event.route';
 import { MusicRouters } from '../modules/music/music.route';
 import { CategoryRouters } from '../modules/category/category.route';
+import { ProductRouters } from '../modules/product/product.route';
 const router = express.Router();
 
 const moduleRoutes = [
@@ -37,6 +38,10 @@ const moduleRoutes = [
     {
         path: '/categories',
         route: CategoryRouters,
+    },
+    {
+        path: '/products',
+        route: ProductRouters,
     },
     {
         path: '/events',

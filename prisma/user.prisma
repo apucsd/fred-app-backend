@@ -29,6 +29,7 @@ model User {
   supportTickets   SupportTicket[]    @relation("SupportTickets")
   events Event[] @relation("events")
   music Music[] @relation("Music")
+  products Product[] @relation("Products")
 
   @@map("users")
 }
