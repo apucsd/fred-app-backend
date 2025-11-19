@@ -28,5 +28,10 @@ export default {
     published_key: process.env.STRIPE_PUBLISHED_KEY,
     stripe_secret_key: process.env.STRIPE_SECRET_KEY,
     stripe_webhook: process.env.STRIPE_WEBHOOK
+  },
+  redis: {
+    host: process.env.REDIS_HOST,
+    port: process.env.REDIS_PORT,
+    password: process.env.REDIS_PASSWORD
   }
 };
