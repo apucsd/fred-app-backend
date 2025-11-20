@@ -3,13 +3,13 @@ import app from './app';
 import seedSuperAdmin from './app/DB';
 import config from './config';
 import { initSocket } from './app/utils/socket';
-import { initRedis } from './app/utils/redis.client';
+// import { initRedis } from './app/utils/redis.client';
 
 const port = config.port || 5000;
 
 async function main() {
     try {
-        await initRedis();
+        // await initRedis();
         const server: HTTPServer = createServer(app);
         
         server.listen(port, () => {
