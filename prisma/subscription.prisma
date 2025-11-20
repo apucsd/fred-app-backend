@@ -1,13 +1,12 @@
 model Subscription {
   id                   String              @id @default(auto()) @map("_id") @db.ObjectId
-  userId               String              @db.ObjectId
+  userId               String              @db.ObjectId 
   packageId            String              @db.ObjectId
   periodStart          DateTime
   periodEnd            DateTime
   stripeSubscriptionId String
   cancelAt             DateTime?
   cancelAtPeriodEnd    Boolean             @default(false)
-  paymentStatus        PaymentStatus       @default(PENDING)
   status               SubscriptionStatus  @default(ACTIVE)
   createdAt            DateTime            @default(now())
   updatedAt            DateTime            @updatedAt
@@ -18,6 +17,8 @@ model Subscription {
   // One subscription -> many payments
   payments    Payment[] @relation("SubscriptionPayment")
 
+
+  @@unique([userId, packageId])
   @@map("subscriptions")
 }
 
@@ -26,5 +27,4 @@ enum SubscriptionStatus {
   INACTIVE
   CANCELLED
   TRIALING
-  PENDING
 }
