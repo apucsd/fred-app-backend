@@ -4,7 +4,7 @@ model Subscription {
   packageId            String              @db.ObjectId
   periodStart          DateTime
   periodEnd            DateTime
-  stripeSubscriptionId String
+  stripeSubscriptionId String              @unique
   cancelAt             DateTime?
   cancelAtPeriodEnd    Boolean             @default(false)
   status               SubscriptionStatus  @default(ACTIVE)

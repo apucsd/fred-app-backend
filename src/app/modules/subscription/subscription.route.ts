@@ -14,4 +14,11 @@ router.post(
     SubscriptionController.createSubscriptionPaymentLink
 );
 
+router.patch(
+    '/cancel',
+    auth(UserRoleEnum.USER, UserRoleEnum.BUSINESS),
+    validateRequest.body(SubscriptionValidation.cancelSubscriptionFromStripeSchema),
+    SubscriptionController.cancelSubscriptionFromStripe
+);
+
 export const SubscriptionRouters = router;

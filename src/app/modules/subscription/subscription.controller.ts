@@ -14,6 +14,17 @@ const createSubscriptionPaymentLink = catchAsync(async (req, res) => {
     });
 });
 
+const cancelSubscriptionFromStripe = catchAsync(async (req, res) => {
+    const result = await SubscriptionService.cancelSubscriptionFromStripe(req.user.id, req.body.packageId);
+    sendResponse(res, {
+        success: true,
+        statusCode: httpStatus.OK,
+        message: 'Subscription cancelled successfully',
+        data: result,
+    });
+});
+
 export const SubscriptionController = {
     createSubscriptionPaymentLink,
+    cancelSubscriptionFromStripe,
 };

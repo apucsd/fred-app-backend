@@ -7,7 +7,6 @@ model Payment {
   currency       String        @default("usd")
   status         PaymentStatus @default(PENDING)
   invoiceId      String?
-  chargeId       String?
   paymentMethod  String?
   createdAt      DateTime      @default(now())
 
