@@ -12,6 +12,7 @@ import { EventRouters } from '../modules/event/event.route';
 import { MusicRouters } from '../modules/music/music.route';
 import { CategoryRouters } from '../modules/category/category.route';
 import { ProductRouters } from '../modules/product/product.route';
+import { WishlistRouters } from '../modules/wishlist/wishlist.route';
 const router = express.Router();
 
 const moduleRoutes = [
@@ -66,6 +67,10 @@ const moduleRoutes = [
     {
         path: '/support-tickets',
         route: SupportTicketRouters,
+    },
+    {
+        path: '/wishlists',
+        route: WishlistRouters,
     },
 ];
 
