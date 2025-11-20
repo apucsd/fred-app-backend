@@ -13,6 +13,7 @@ import { MusicRouters } from '../modules/music/music.route';
 import { CategoryRouters } from '../modules/category/category.route';
 import { ProductRouters } from '../modules/product/product.route';
 import { WishlistRouters } from '../modules/wishlist/wishlist.route';
+import { SubscriptionRouters } from '../modules/subscription/subscription.route';
 const router = express.Router();
 
 const moduleRoutes = [
@@ -55,6 +56,10 @@ const moduleRoutes = [
     {
         path: '/packages',
         route: packageRouters,
+    },
+    {
+        path: '/subscriptions',
+        route: SubscriptionRouters,
     },
     {
         path: '/faqs',

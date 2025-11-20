@@ -31,6 +31,8 @@ model User {
   music Music[] @relation("Music")
   products Product[] @relation("Products")
   wishlists Wishlist[] @relation("userWishlist")
+  subscriptions Subscription[] @relation("UserSubscriptions")
+  payments Payment[] @relation("UserPayments")
 
   @@map("users")
 }

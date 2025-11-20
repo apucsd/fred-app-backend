@@ -1,0 +1,27 @@
+model Payment {
+  id             String        @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String        @db.ObjectId
+  packageId      String        @db.ObjectId
+  subscriptionId String        @db.ObjectId
+  amount         Float
+  currency       String        @default("usd")
+  status         PaymentStatus @default(PENDING)
+  invoiceId      String?
+  chargeId       String?
+  paymentMethod  String?
+  createdAt      DateTime      @default(now())
+
+  user        User        @relation("UserPayments", fields: [userId], references: [id])
+  package     Package     @relation("PackagePayments", fields: [packageId], references: [id])
+
+  // Many payments -> one subscription (FK is here)
+  subscription Subscription @relation("SubscriptionPayment", fields: [subscriptionId], references: [id])
+
+  @@map("payments")
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}

@@ -1,0 +1,30 @@
+model Subscription {
+  id                   String              @id @default(auto()) @map("_id") @db.ObjectId
+  userId               String              @db.ObjectId
+  packageId            String              @db.ObjectId
+  periodStart          DateTime
+  periodEnd            DateTime
+  stripeSubscriptionId String
+  cancelAt             DateTime?
+  cancelAtPeriodEnd    Boolean             @default(false)
+  paymentStatus        PaymentStatus       @default(PENDING)
+  status               SubscriptionStatus  @default(ACTIVE)
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+
+  user        User      @relation("UserSubscriptions", fields: [userId], references: [id])
+  package     Package   @relation("PackageSubscriptions", fields: [packageId], references: [id])
+
+  // One subscription -> many payments
+  payments    Payment[] @relation("SubscriptionPayment")
+
+  @@map("subscriptions")
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  INACTIVE
+  CANCELLED
+  TRIALING
+  PENDING
+}
