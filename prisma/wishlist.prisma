@@ -1,0 +1,11 @@
+model Wishlist {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  productId String   @db.ObjectId
+  createdAt DateTime @default(now())
+
+  user      User     @relation("userWishlist", fields: [userId], references: [id])
+  product   Product  @relation("productWishlist", fields: [productId], references: [id])
+  @@unique([userId, productId]) 
+  @@map("wishlists")
+}

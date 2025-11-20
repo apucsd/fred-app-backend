@@ -30,6 +30,7 @@ model User {
   events Event[] @relation("events")
   music Music[] @relation("Music")
   products Product[] @relation("Products")
+  wishlists Wishlist[] @relation("userWishlist")
 
   @@map("users")
 }

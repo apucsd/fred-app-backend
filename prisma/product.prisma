@@ -5,11 +5,12 @@ model Product {
     price Float
     images String[]
     status ProductStatus @default(ACTIVE)
-    categoryId String
-    userId String
+    categoryId String @db.ObjectId
+    userId String @db.ObjectId
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
     category Category @relation("Category", fields: [categoryId], references: [id])
+    wishlists Wishlist[] @relation("productWishlist")
     user User @relation("Products", fields: [userId], references: [id])
 } 
