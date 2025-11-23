@@ -84,7 +84,25 @@ const cancelSubscriptionFromStripe = async (userId: string, packageId: string) =
     return result;
 };
 
+const upgradeSubscriptionFromStripeBilling = async (userId: string) => {
+    const user = await prisma.user.findUnique({
+        where: { id: userId, status: 'ACTIVE' },
+    });
+
+    if (!user?.stripeCustomerId) {
+        throw new AppError(httpStatus.BAD_REQUEST, 'User not found');
+    }
+
+    const billingUrl = await stripe.billingPortal.sessions.create({
+        customer: user.stripeCustomerId,
+        return_url: `${config.base_url_client}/subscription`,
+    });
+
+    return billingUrl.url;
+};
+
 export const SubscriptionService = {
     createSubscriptionPaymentLink,
     cancelSubscriptionFromStripe,
+    upgradeSubscriptionFromStripeBilling,
 };

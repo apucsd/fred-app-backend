@@ -177,10 +177,18 @@ const handleSubscriptionUpdated = async (
     });
 
     if (!existingSub) return;
+    const newPriceId = subscription.items.data[0].price.id;
+
+    const newPackage = await prisma.package.findFirst({
+        where: { stripePriceId: newPriceId },
+    });
+
+    // console.log({ newPriceId, newPackage });
 
     await prisma.subscription.update({
         where: { stripeSubscriptionId: stripeSubId },
         data: {
+            packageId: newPackage?.id ?? existingSub.packageId,
             status: mapStripeStatus(subscription.status),
             cancelAtPeriodEnd: subscription.cancel_at_period_end,
             cancelAt: subscription.canceled_at ? new Date(subscription.canceled_at * 1000) : null,

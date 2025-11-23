@@ -20,5 +20,6 @@ router.patch(
     validateRequest.body(SubscriptionValidation.cancelSubscriptionFromStripeSchema),
     SubscriptionController.cancelSubscriptionFromStripe
 );
+router.patch('/upgrade', auth(UserRoleEnum.USER, UserRoleEnum.BUSINESS), SubscriptionController.upgradeSubscription);
 
 export const SubscriptionRouters = router;
