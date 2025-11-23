@@ -1,6 +1,5 @@
 import express from 'express';
 import { MessageRouters } from '../modules/messages/message.route';
-import { NotificationsRouters } from '../modules/notification/notification.route';
 import { AuthRouters } from '../modules/auth/auth.routes';
 import { AssetRouters } from '../modules/asset/asset.route';
 import { UserRouters } from '../modules/user/user.routes';
@@ -15,6 +14,7 @@ import { ProductRouters } from '../modules/product/product.route';
 import { WishlistRouters } from '../modules/wishlist/wishlist.route';
 import { SubscriptionRouters } from '../modules/subscription/subscription.route';
 import { ReviewRouters } from '../modules/review/review.route';
+import { NotificationRouters } from '../modules/notification/notification.route';
 const router = express.Router();
 
 const moduleRoutes = [
@@ -30,10 +30,10 @@ const moduleRoutes = [
     //     path: '/messages',
     //     route: MessageRouters,
     // },
-    // {
-    //     path: '/notifications',
-    //     route: NotificationsRouters,
-    // },
+    {
+        path: '/notifications',
+        route: NotificationRouters,
+    },
     // {
     //     path: '/assets',
     //     route: AssetRouters,

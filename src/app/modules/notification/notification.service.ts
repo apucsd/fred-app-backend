@@ -1,153 +1,59 @@
-import { NotificationType, NotificationUser, User } from '@prisma/client';
 import QueryBuilder from '../../builder/QueryBuilder';
-import { getSocket } from '../../utils/socket';
 import { prisma } from '../../utils/prisma';
+import { getSocket } from '../../utils/socket';
+import { INotification } from './notification.interface';
 
-const createNotification = async (payload: {
-    title: string;
-    message: string;
-    type: NotificationType;
-    userIds: string[];
-    redirectEndpoint?: string;
-}) => {
-    const { title, message, type, userIds, redirectEndpoint } = payload;
-
-    const io = getSocket();
-
-    // Create the notification
+const createNotificationToDB = async (payload: INotification) => {
     const notification = await prisma.notification.create({
-        data: {
-            title,
-            message,
-            type,
-            redirectEndpoint: redirectEndpoint || '',
-        },
+        data: payload,
     });
-
-    // Save notification recipients and emit socket events
-    if (userIds.length > 0) {
-        const NotificationUsers = userIds.map((userId) => ({
-            notificationId: notification.id,
-            userId,
-        }));
-
-        await prisma.notificationUser.createMany({
-            data: NotificationUsers,
-        });
-
-        userIds.forEach((id) => {
-            console.log(`Emitting to user: ${id}`);
-            io.to(id).emit('notification', {
-                ...notification,
-                isRead: false,
-            });
-            console.log(`Notification emitted to ${id}`);
-        });
-
-        console.log(`Notification sent to ${userIds.length} users:`, userIds);
-    } else {
-        console.log('No users provided for notification');
+    const socket = getSocket();
+    if (socket) {
+        socket.emit(`notification::${payload.recipientId}`, notification);
     }
-
     return notification;
 };
 
-const getAllNotificationsByUser = async (id: string, query: Record<string, unknown>) => {
-    query.userId = id;
-    const notificationQuery = new QueryBuilder(prisma.notificationUser, query);
-    const result = await notificationQuery
-        .search(['name'])
+const getUserNotifications = async (userId: string, query: Record<string, any>) => {
+    const result = await new QueryBuilder(prisma.notification, query)
+        .search(['message'])
         .filter()
-        .sort()
-        .exclude()
         .paginate()
-        .customFields({
-            id: true,
-            isRead: true,
-            notificationId: true,
-            createdAt: true,
-            notification: {
-                select: {
-                    id: true,
-                    message: true,
-                    createdAt: true,
-                    title: true,
-                    type: true,
-                    redirectEndpoint: true,
-                },
-            },
-            receivedAt: true,
-            updatedAt: true,
-            userId: true,
-            user: {
-                select: {
-                    name: true,
-                    email: true,
-                    role: true,
-                },
-            },
-        })
+        .sort()
+        .fields()
         .execute();
-    return result;
+    const unreadNotifications = await prisma.notification.count({ where: { recipientId: userId, isRead: false } });
+    return {
+        result,
+        unreadNotifications,
+    };
 };
 
-const getUsersByNotification = async (notificationId: string) => {
-    const users = await prisma.notificationUser.findMany({
-        where: {
-            notificationId: notificationId,
-        },
-        include: {
-            user: true,
-        },
-    });
-
-    return users.map((recipient) => recipient.user);
+const getSingleNotification = async (notificationId: string, userId: string) => {
+    return prisma.notification.findUnique({ where: { id: notificationId, recipientId: userId } });
 };
 
-const markNotificationAsRead = async (notificationId: string, userId: string) => {
-    const updatedRecipient = await prisma.notificationUser.updateMany({
-        where: {
-            notificationId: notificationId,
-            userId: userId,
-        },
-        data: {
-            isRead: true,
-        },
-    });
-
-    return updatedRecipient;
+const markAllNotificationsAsReadInToDB = async (userId: string) => {
+    return prisma.notification.updateMany({ where: { recipientId: userId, isRead: false }, data: { isRead: true } });
 };
 
-const getUnreadNotificationCount = async (userId: string) => {
-    const count = await prisma.notificationUser.count({
-        where: {
-            userId: userId,
-            isRead: false,
-        },
-    });
-
-    return count;
+const markSingleNotificationAsRead = async (notificationId: string, userId: string) => {
+    return prisma.notification.update({ where: { id: notificationId, recipientId: userId }, data: { isRead: true } });
 };
 
-const markAllNotificationsAsRead = async (userId: string) => {
-    const updatedRecipients = await prisma.notificationUser.updateMany({
-        where: {
-            userId: userId,
-            isRead: false,
-        },
-        data: {
-            isRead: true,
-        },
-    });
-
-    return updatedRecipients;
+const deleteSingleNotification = async (notificationId: string, userId: string) => {
+    return prisma.notification.delete({ where: { id: notificationId, recipientId: userId } });
+};
+const deleteAllNotifications = async (userId: string) => {
+    return prisma.notification.deleteMany({ where: { recipientId: userId } });
 };
 
-export const notificationServices = {
-    createNotification,
-    getAllNotificationsByUser,
-    getUsersByNotification,
-    markNotificationAsRead,
-    getUnreadNotificationCount,
-    markAllNotificationsAsRead,
+export const NotificationService = {
+    createNotificationToDB,
+    getUserNotifications,
+    markAllNotificationsAsReadInToDB,
+    markSingleNotificationAsRead,
+    deleteAllNotifications,
+    deleteSingleNotification,
+    getSingleNotification,
 };

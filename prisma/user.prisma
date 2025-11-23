@@ -26,7 +26,6 @@ model User {
 
   sentMessages     Message[]          @relation("SentMessages")
   receivedMessages Message[]          @relation("ReceivedMessages")
-  notifications    NotificationUser[]
   supportTickets   SupportTicket[]    @relation("SupportTickets")
   events Event[] @relation("events")
   music Music[] @relation("Music")
@@ -35,6 +34,9 @@ model User {
   subscriptions Subscription[] @relation("UserSubscriptions")
   payments Payment[] @relation("UserPayments")
   reviews Review[] @relation("UserReview")
+  notifications Notification[] @relation("NotificationRecipient")
+  sentNotifications Notification[] @relation("NotificationSender")
+
 
   @@map("users")
 }

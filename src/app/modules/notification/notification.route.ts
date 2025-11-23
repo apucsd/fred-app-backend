@@ -1,43 +1,39 @@
-import express from 'express';
+import { Router } from 'express';
 import auth from '../../middlewares/auth';
+import { NotificationController } from './notification.controller';
 import { UserRoleEnum } from '@prisma/client';
-import { notificationsControllers } from './notification.controller';
 import validateRequest from '../../middlewares/validateRequest';
 import { notificationValidation } from './notification.validation';
 
-export const NotificationsRouters = express.Router();
-
-// Get all notifications for the authenticated user
-NotificationsRouters.get(
-  '/',
-  auth('ANY'),
-  notificationsControllers.getAllNotifications,
+const router = Router();
+// CREATE FOR MANUAL NOTIFICATION
+router.post(
+    '/',
+    auth(UserRoleEnum.USER, UserRoleEnum.BUSINESS, UserRoleEnum.SUPERADMIN),
+    validateRequest.body(notificationValidation.createNotification),
+    NotificationController.createNotification
+);
+router.get('/', auth('ANY'), NotificationController.getMyNotifications);
+router.get('/:id', auth('ANY'), NotificationController.getSingleNotification);
+router.patch(
+    '/mark-all-as-read',
+    auth(UserRoleEnum.USER, UserRoleEnum.BUSINESS, UserRoleEnum.SUPERADMIN),
+    NotificationController.markAllNotificationsAsRead
+);
+router.patch(
+    '/mark-single-as-read/:id',
+    auth(UserRoleEnum.USER, UserRoleEnum.BUSINESS, UserRoleEnum.SUPERADMIN),
+    NotificationController.markSingleNotificationAsRead
+);
+router.delete(
+    '/all',
+    auth(UserRoleEnum.USER, UserRoleEnum.BUSINESS, UserRoleEnum.SUPERADMIN),
+    NotificationController.deleteAllNotifications
+);
+router.delete(
+    '/:id',
+    auth(UserRoleEnum.USER, UserRoleEnum.BUSINESS, UserRoleEnum.SUPERADMIN),
+    NotificationController.deleteSingleNotification
 );
 
-// Get all users by a specific notification ID
-NotificationsRouters.get(
-  '/users/:notificationId',
-  auth('SUPERADMIN'),
-  notificationsControllers.getUsersByNotification,
-);
-
-// Mark a specific notification as read for the authenticated user
-NotificationsRouters.patch(
-  '/read/:notificationId',
-  auth('ANY'),
-  notificationsControllers.markNotificationAsRead,
-);
-
-// Get the unread notification count for the authenticated user
-NotificationsRouters.get(
-  '/unread/count',
-  auth('ANY'),
-  notificationsControllers.getUnreadNotificationCount,
-);
-
-// Mark all notifications as read for the authenticated user
-NotificationsRouters.patch(
-  '/read-all',
-  auth('ANY'),
-  notificationsControllers.markAllNotificationsAsRead,
-);
+export const NotificationRouters = router;

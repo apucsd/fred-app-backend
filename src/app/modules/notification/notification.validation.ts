@@ -1,15 +1,19 @@
-import { z } from "zod";
+import { z } from 'zod';
 
-const updateEmailSettings = z.object({
+const createNotification = z.object({
     body: z.object({
-        scheduleEntry: z.boolean().optional(),
-        reschedule: z.boolean().optional(),
-        message: z.boolean().optional(),
-        connectionRequest: z.boolean().optional(),
-        businessCardRequest: z.boolean().optional(),
-    })
-})
+        recipientId: z.string({
+            required_error: 'Recipient ID is required',
+        }),
+        type: z.enum(['INFO', 'MESSAGE', 'FOLLOW', 'SUBSCRIPTION']).default('INFO'),
+        message: z
+            .string({
+                required_error: 'Message is required',
+            })
+            .min(10, 'Message must be at least 10 characters long'),
+    }),
+});
 
 export const notificationValidation = {
-    updateEmailSettings
-}
+    createNotification,
+};
