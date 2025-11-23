@@ -13,6 +13,15 @@ const createSubscriptionPaymentLink = catchAsync(async (req, res) => {
         data: result,
     });
 });
+const getMySubscription = catchAsync(async (req, res) => {
+    const result = await SubscriptionService.getMySubscriptionFromDB(req.user.id);
+    sendResponse(res, {
+        success: true,
+        statusCode: httpStatus.OK,
+        message: 'Subscription fetched successfully',
+        data: result,
+    });
+});
 
 const cancelSubscriptionFromStripe = catchAsync(async (req, res) => {
     const result = await SubscriptionService.cancelSubscriptionFromStripe(req.user.id, req.body.packageId);
@@ -29,7 +38,7 @@ const upgradeSubscription = catchAsync(async (req, res) => {
     sendResponse(res, {
         success: true,
         statusCode: httpStatus.OK,
-        message: 'Subscription upgraded successfully',
+        message: 'Subscription billing portal opened successfully',
         data: result,
     });
 });
@@ -38,4 +47,5 @@ export const SubscriptionController = {
     createSubscriptionPaymentLink,
     cancelSubscriptionFromStripe,
     upgradeSubscription,
+    getMySubscription,
 };

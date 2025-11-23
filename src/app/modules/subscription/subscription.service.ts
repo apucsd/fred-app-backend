@@ -70,6 +70,17 @@ const createSubscriptionPaymentLink = async (userId: string, packageId: string) 
     return session.url;
 };
 
+const getMySubscriptionFromDB = async (userId: string) => {
+    const isExistSubscription = await prisma.subscription.findMany({
+        where: { userId: userId },
+        include: {
+            package: true,
+        },
+    });
+
+    return isExistSubscription;
+};
+
 const cancelSubscriptionFromStripe = async (userId: string, packageId: string) => {
     const isExistSubscription = await prisma.subscription.findUnique({
         where: { userId_packageId: { userId, packageId } },
@@ -105,4 +116,5 @@ export const SubscriptionService = {
     createSubscriptionPaymentLink,
     cancelSubscriptionFromStripe,
     upgradeSubscriptionFromStripeBilling,
+    getMySubscriptionFromDB,
 };

@@ -1,6 +1,6 @@
 model Subscription {
   id                   String              @id @default(auto()) @map("_id") @db.ObjectId
-  userId               String              @db.ObjectId 
+  userId               String              @unique @db.ObjectId  
   packageId            String              @db.ObjectId
   periodStart          DateTime
   periodEnd            DateTime

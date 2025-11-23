@@ -13,6 +13,7 @@ router.post(
     validateRequest.body(SubscriptionValidation.createSubscriptionPaymentLinkSchema),
     SubscriptionController.createSubscriptionPaymentLink
 );
+router.get('/', auth(UserRoleEnum.USER, UserRoleEnum.BUSINESS), SubscriptionController.getMySubscription);
 
 router.patch(
     '/cancel',
