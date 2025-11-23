@@ -3,11 +3,39 @@ import AppError from '../../errors/AppError';
 import { prisma } from '../../utils/prisma';
 import { ISupportTicket } from './support-ticket.interface';
 import QueryBuilder from '../../builder/QueryBuilder';
+import { UserRoleEnum } from '@prisma/client';
+import { getSocket } from '../../utils/socket';
 
 const createSupportTicketInDB = async (data: ISupportTicket) => {
+    const ticketCreator = await prisma.user.findUnique({
+        where: {
+            id: data.userId,
+            status: 'ACTIVE',
+        },
+    });
+    const super_admin = await prisma.user.findFirst({
+        where: {
+            role: UserRoleEnum.SUPERADMIN,
+        },
+    });
+    if (!ticketCreator) {
+        throw new AppError(httpStatus.NOT_FOUND, 'User not found');
+    }
     const supportTicket = await prisma.supportTicket.create({
         data,
     });
+
+    const createdNotification = await prisma.notification.create({
+        data: {
+            message: `New support ticket created by ${ticketCreator.name}`,
+            recipientId: super_admin?.id!,
+        },
+    });
+
+    const socket = getSocket();
+    if (socket) {
+        socket.emit(`notification::${createdNotification.recipientId}`, createdNotification);
+    }
     return supportTicket;
 };
 
