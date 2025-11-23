@@ -34,6 +34,7 @@ model User {
   wishlists Wishlist[] @relation("userWishlist")
   subscriptions Subscription[] @relation("UserSubscriptions")
   payments Payment[] @relation("UserPayments")
+  reviews Review[] @relation("UserReview")
 
   @@map("users")
 }

@@ -4,6 +4,7 @@ model Product {
     description String
     price Float
     images String[]
+    buyLink String?      @default("")
     status ProductStatus @default(ACTIVE)
     categoryId String @db.ObjectId
     userId String @db.ObjectId
@@ -13,6 +14,7 @@ model Product {
     category Category @relation("Category", fields: [categoryId], references: [id])
     wishlists Wishlist[] @relation("productWishlist")
     user User @relation("Products", fields: [userId], references: [id])
+    reviews Review[] @relation("ProductReview")
 
 
     @@map("products")

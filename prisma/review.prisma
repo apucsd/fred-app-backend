@@ -1,0 +1,14 @@
+model Review {
+   id String @id @default(auto()) @map("_id") @db.ObjectId
+   feedback String
+   rating Int
+   userId String @db.ObjectId
+   productId String @db.ObjectId
+   createdAt DateTime @default(now())
+   updatedAt DateTime @updatedAt
+   user User @relation("UserReview", fields: [userId], references: [id])
+   product Product @relation("ProductReview", fields: [productId], references: [id])
+
+
+   @@map("reviews")
+}

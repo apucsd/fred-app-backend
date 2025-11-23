@@ -4,25 +4,19 @@ import QueryBuilder from '../../builder/QueryBuilder';
 
 const createReview = async (review: IReview) => {
     const result = await prisma.review.create({
-        data: {
-            userId: review.userId,
-            productId: review.productId,
-            rating: review.rating,
-            comment: review.comment,
-            status: review.status || 'pending',
-        },
-        include: {
-            user: true,
-            product: true,
-        },
+        data: review,
     });
     return result;
 };
 
-const getReviews = async (query: Record<string, any>) => {
-    const reviewQuery = new QueryBuilder(prisma.review, query);
+const getReviews = async (query: Record<string, any>, userId: string) => {
+    const reviewQuery = new QueryBuilder(prisma.review, { ...query, userId });
     const result = await reviewQuery
         .search(['comment'])
+        .include({
+            user: true,
+            product: true,
+        })
         .filter()
         .sort()
         .fields()

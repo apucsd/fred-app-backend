@@ -1,30 +1,27 @@
 import { Request, Response } from 'express';
 import httpStatus from 'http-status';
-import { paginationFields } from '../../../constants/pagination';
 import catchAsync from '../../utils/catchAsync';
-import pick from '../../utils/pick';
-import { reviewFilterableFields } from './review.validation';
 import { ReviewService } from './review.service';
 import { IReview } from './review.interface';
+import sendResponse from '../../utils/sendResponse';
 
 const createReview = catchAsync(async (req: Request, res: Response) => {
+    req.body.userId = req.user.id;
     const reviewData: IReview = req.body;
+
     const result = await ReviewService.createReview(reviewData);
-    res.status(httpStatus.CREATED).json({
+    sendResponse(res, {
         success: true,
-        statusCode: httpStatus.CREATED,
+        statusCode: httpStatus.OK,
         message: 'Review created successfully',
         data: result,
     });
 });
 
 const getReviews = catchAsync(async (req: Request, res: Response) => {
-    const filters = pick(req.query, reviewFilterableFields);
-    const paginationOptions = pick(req.query, paginationFields);
+    const result = await ReviewService.getReviews(req.query, req.user.id);
 
-    const result = await ReviewService.getReviews(filters, paginationOptions);
-
-    res.status(httpStatus.OK).json({
+    sendResponse(res, {
         success: true,
         statusCode: httpStatus.OK,
         message: 'Reviews retrieved successfully',
@@ -37,7 +34,7 @@ const getSingleReview = catchAsync(async (req: Request, res: Response) => {
     const { id } = req.params;
     const result = await ReviewService.getSingleReview(id);
 
-    res.status(httpStatus.OK).json({
+    sendResponse(res, {
         success: true,
         statusCode: httpStatus.OK,
         message: 'Review retrieved successfully',
@@ -51,7 +48,7 @@ const updateReview = catchAsync(async (req: Request, res: Response) => {
 
     const result = await ReviewService.updateReview(id, updateData);
 
-    res.status(httpStatus.OK).json({
+    sendResponse(res, {
         success: true,
         statusCode: httpStatus.OK,
         message: 'Review updated successfully',
@@ -63,7 +60,7 @@ const deleteReview = catchAsync(async (req: Request, res: Response) => {
     const { id } = req.params;
     const result = await ReviewService.deleteReview(id);
 
-    res.status(httpStatus.OK).json({
+    sendResponse(res, {
         success: true,
         statusCode: httpStatus.OK,
         message: 'Review deleted successfully',

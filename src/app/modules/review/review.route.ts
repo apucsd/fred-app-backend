@@ -1,39 +1,30 @@
 import express from 'express';
-import { ENUM_USER_ROLE } from '../../../enums/user';
 import auth from '../../middlewares/auth';
-import validateRequest from '../../middlewares/validateRequest';
 import { ReviewController } from './review.controller';
 import { ReviewValidation } from './review.validation';
+import validateRequest from '../../middlewares/validateRequest';
+import { UserRoleEnum } from '@prisma/client';
 
 const router = express.Router();
 
 router.post(
-  '/',
-  validateRequest(ReviewValidation.createReviewZodSchema),
-  ReviewController.createReview
+    '/',
+    auth(UserRoleEnum.USER),
+    validateRequest.body(ReviewValidation.createReviewZodSchema),
+    ReviewController.createReview
 );
 
-router.get(
-  '/',
-  ReviewController.getReviews
-);
+router.get('/', auth(UserRoleEnum.USER), ReviewController.getReviews);
 
-router.get(
-  '/:id',
-  ReviewController.getSingleReview
-);
+router.get('/:id', auth(UserRoleEnum.USER), ReviewController.getSingleReview);
 
 router.patch(
-  '/:id',
-  auth(ENUM_USER_ROLE.ADMIN, ENUM_USER_ROLE.USER),
-  validateRequest(ReviewValidation.updateReviewZodSchema),
-  ReviewController.updateReview
+    '/:id',
+    auth(UserRoleEnum.USER),
+    validateRequest.body(ReviewValidation.updateReviewZodSchema),
+    ReviewController.updateReview
 );
 
-router.delete(
-  '/:id',
-  auth(ENUM_USER_ROLE.ADMIN, ENUM_USER_ROLE.USER),
-  ReviewController.deleteReview
-);
+router.delete('/:id', auth(UserRoleEnum.USER), ReviewController.deleteReview);
 
-export const ReviewRoutes = router;
+export const ReviewRouters = router;
