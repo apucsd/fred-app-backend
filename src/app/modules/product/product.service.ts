@@ -66,14 +66,33 @@ const getAllProductsFromDB = async (query: Record<string, any>) => {
     const result = await productQuery
         .search(['title', 'description'])
         .include({
-            category: true,
-            user: true,
+            category: {
+                select: {
+                    id: true,
+                    title: true,
+                },
+            },
+            user: {
+                select: {
+                    id: true,
+                    name: true,
+                    profile: true,
+                },
+            },
+            reviews: {
+                select: {
+                    id: true,
+                    feedback: true,
+                    rating: true,
+                },
+            },
         })
         .sort()
         .paginate()
         .filter()
         .fields()
         .execute();
+
     return result;
 };
 

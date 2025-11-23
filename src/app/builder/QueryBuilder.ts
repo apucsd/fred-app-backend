@@ -30,12 +30,30 @@ class QueryBuilder<ModelDelegate extends { findMany: Function; count: Function }
     }
 
     // Include
-    include(relations: Record<string, any>) {
-        this.prismaQuery.include = {
-            ...(this.prismaQuery.include || {}),
-            ...relations,
-        };
+    include(relations: Record<string, any> | ((select: any) => Record<string, any>)) {
+        if (typeof relations === 'function') {
+            // If it's a function, call it with the select builder
+            this.prismaQuery.include = {
+                ...(this.prismaQuery.include || {}),
+                ...relations(this.buildSelectForRelation.bind(this)),
+            };
+        } else {
+            this.prismaQuery.include = {
+                ...(this.prismaQuery.include || {}),
+                ...relations,
+            };
+        }
         return this;
+    }
+
+    // Helper method to build select for relations
+    private buildSelectForRelation(fields: string | string[]) {
+        const fieldArray = Array.isArray(fields) ? fields : [fields];
+        const select: Record<string, boolean> = {};
+        fieldArray.forEach((field) => {
+            select[field] = true;
+        });
+        return select;
     }
 
     // Filter

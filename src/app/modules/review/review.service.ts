@@ -6,6 +6,7 @@ const createReview = async (review: IReview) => {
     const result = await prisma.review.create({
         data: review,
     });
+
     return result;
 };
 
