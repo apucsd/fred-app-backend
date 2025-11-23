@@ -4,34 +4,36 @@ import path from 'path';
 dotenv.config({ path: path.join(process.cwd(), '.env') });
 
 export default {
-  env: process.env.NODE_ENV,
-  port: process.env.PORT,
-  super_admin_password: process.env.SUPER_ADMIN_PASSWORD,
-  bcrypt_salt_rounds: process.env.BCRYPT_SALT_ROUNDS,
-  mail: process.env.MAIL,
-  mail_password: process.env.MAIL_PASS,
-  base_url_server: process.env.BASE_URL_SERVER,
-  base_url_client: process.env.BASE_URL_CLIENT,
-  jwt: {
-    access_secret: process.env.JWT_ACCESS_SECRET,
-    access_expires_in: process.env.JWT_ACCESS_EXPIRES_IN,
-    refresh_secret: process.env.JWT_REFRESH_SECRET,
-    refresh_expires_in: process.env.JWT_REFRESH_EXPIRES_IN,
-  },
-  do_space: {
-    endpoints: process.env.DO_SPACE_ENDPOINT,
-    access_key: process.env.DO_SPACE_ACCESS_KEY,
-    secret_key: process.env.DO_SPACE_SECRET_KEY,
-    bucket: process.env.DO_SPACE_BUCKET
-  },
-  stripe: {
-    published_key: process.env.STRIPE_PUBLISHED_KEY,
-    stripe_secret_key: process.env.STRIPE_SECRET_KEY,
-    stripe_webhook: process.env.STRIPE_WEBHOOK
-  },
-  redis: {
-    host: process.env.REDIS_HOST,
-    port: process.env.REDIS_PORT,
-    password: process.env.REDIS_PASSWORD
-  }
+    env: process.env.NODE_ENV,
+    port: process.env.PORT,
+    super_admin_password: process.env.SUPER_ADMIN_PASSWORD,
+    bcrypt_salt_rounds: process.env.BCRYPT_SALT_ROUNDS,
+    mail: process.env.MAIL,
+    mail_password: process.env.MAIL_PASS,
+    base_url_server: process.env.BASE_URL_SERVER,
+    base_url_client: process.env.BASE_URL_CLIENT,
+    jwt: {
+        access_secret: process.env.JWT_ACCESS_SECRET,
+        access_expires_in: process.env.JWT_ACCESS_EXPIRES_IN,
+        refresh_secret: process.env.JWT_REFRESH_SECRET,
+        refresh_expires_in: process.env.JWT_REFRESH_EXPIRES_IN,
+    },
+    do_space: {
+        endpoints: process.env.DO_SPACE_ENDPOINT,
+        access_key: process.env.DO_SPACE_ACCESS_KEY,
+        secret_key: process.env.DO_SPACE_SECRET_KEY,
+        bucket: process.env.DO_SPACE_BUCKET,
+    },
+    stripe: {
+        published_key: process.env.STRIPE_PUBLISHED_KEY,
+        stripe_secret_key: process.env.STRIPE_SECRET_KEY,
+        stripe_webhook: process.env.STRIPE_WEBHOOK,
+        stripe_user_portal_config_id: process.env.STRIPE_USER_PORTAL_CONFIG_ID,
+        stripe_business_portal_config_id: process.env.STRIPE_BUSINESS_PORTAL_CONFIG_ID,
+    },
+    redis: {
+        host: process.env.REDIS_HOST,
+        port: process.env.REDIS_PORT,
+        password: process.env.REDIS_PASSWORD,
+    },
 };

@@ -101,15 +101,30 @@ const upgradeSubscriptionFromStripeBilling = async (userId: string) => {
     });
 
     if (!user?.stripeCustomerId) {
-        throw new AppError(httpStatus.BAD_REQUEST, 'User not found');
+        throw new AppError(httpStatus.BAD_REQUEST, 'User not found do not have any subscription yet');
     }
 
-    const billingUrl = await stripe.billingPortal.sessions.create({
-        customer: user.stripeCustomerId,
-        return_url: `${config.base_url_client}/subscription`,
+    const currentSubscription = await prisma.subscription.findFirst({
+        where: { userId, status: 'ACTIVE' },
+        include: { package: true },
     });
 
-    return billingUrl.url;
+    if (!currentSubscription) {
+        throw new AppError(httpStatus.BAD_REQUEST, 'User has no active subscription');
+    }
+
+    const configurationId =
+        currentSubscription.package.type === 'BUSINESS'
+            ? config.stripe.stripe_business_portal_config_id
+            : config.stripe.stripe_user_portal_config_id;
+
+    const session = await stripe.billingPortal.sessions.create({
+        customer: user.stripeCustomerId,
+        return_url: `${config.base_url_client}/subscription`,
+        configuration: configurationId,
+    });
+
+    return session.url;
 };
 
 export const SubscriptionService = {
