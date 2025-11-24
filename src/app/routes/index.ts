@@ -15,6 +15,7 @@ import { WishlistRouters } from '../modules/wishlist/wishlist.route';
 import { SubscriptionRouters } from '../modules/subscription/subscription.route';
 import { ReviewRouters } from '../modules/review/review.route';
 import { NotificationRouters } from '../modules/notification/notification.route';
+import { FollowRoutes } from '../modules/follow/follow.route';
 const router = express.Router();
 
 const moduleRoutes = [
@@ -81,6 +82,10 @@ const moduleRoutes = [
     {
         path: '/reviews',
         route: ReviewRouters,
+    },
+    {
+        path: '/follows',
+        route: FollowRoutes,
     },
 ];
 
