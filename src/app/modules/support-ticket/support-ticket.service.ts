@@ -4,7 +4,8 @@ import { prisma } from '../../utils/prisma';
 import { ISupportTicket } from './support-ticket.interface';
 import QueryBuilder from '../../builder/QueryBuilder';
 import { UserRoleEnum } from '@prisma/client';
-import { getSocket } from '../../utils/socket';
+// import { getSocket } from '../../utils/socket';
+import { sendEventToUser } from '../../utils/ws-server';
 
 const createSupportTicketInDB = async (data: ISupportTicket) => {
     const ticketCreator = await prisma.user.findUnique({
@@ -32,10 +33,11 @@ const createSupportTicketInDB = async (data: ISupportTicket) => {
         },
     });
 
-    const socket = getSocket();
-    if (socket) {
-        socket.emit(`notification::${createdNotification.recipientId}`, createdNotification);
-    }
+    // const socket = getSocket();
+    // if (socket) {
+    //     socket.emit(`notification::${createdNotification.recipientId}`, createdNotification);
+    // }
+    sendEventToUser(`notification::${createdNotification.recipientId}`, createdNotification);
     return supportTicket;
 };
 

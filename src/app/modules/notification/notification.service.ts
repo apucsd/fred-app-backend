@@ -1,16 +1,13 @@
 import QueryBuilder from '../../builder/QueryBuilder';
 import { prisma } from '../../utils/prisma';
-import { getSocket } from '../../utils/socket';
+import { sendEventToUser } from '../../utils/ws-server';
 import { INotification } from './notification.interface';
 
 const createNotificationToDB = async (payload: INotification) => {
     const notification = await prisma.notification.create({
         data: payload,
     });
-    const socket = getSocket();
-    if (socket) {
-        socket.emit(`notification::${payload.recipientId}`, notification);
-    }
+    sendEventToUser(`notification::${payload.recipientId}`, notification);
     return notification;
 };
 
