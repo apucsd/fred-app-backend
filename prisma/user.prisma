@@ -36,6 +36,8 @@ model User {
   reviews Review[] @relation("UserReview")
   notifications Notification[] @relation("NotificationRecipient")
   sentNotifications Notification[] @relation("NotificationSender")
+  following Follow[] @relation("UserFollowing") 
+  followers Follow[] @relation("UserFollowers") 
 
 
   @@map("users")
