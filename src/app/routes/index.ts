@@ -1,7 +1,6 @@
 import express from 'express';
 import { MessageRouters } from '../modules/messages/message.route';
 import { AuthRouters } from '../modules/auth/auth.routes';
-import { AssetRouters } from '../modules/asset/asset.route';
 import { UserRouters } from '../modules/user/user.routes';
 import { packageRouters } from '../modules/package/package.route';
 import { FaqRouters } from '../modules/faq/faq.route';
@@ -16,6 +15,7 @@ import { SubscriptionRouters } from '../modules/subscription/subscription.route'
 import { ReviewRouters } from '../modules/review/review.route';
 import { NotificationRouters } from '../modules/notification/notification.route';
 import { FollowRoutes } from '../modules/follow/follow.route';
+import { ChatRoutes } from '../modules/chat/chat.route';
 const router = express.Router();
 
 const moduleRoutes = [
@@ -27,10 +27,14 @@ const moduleRoutes = [
         path: '/users',
         route: UserRouters,
     },
-    // {
-    //     path: '/messages',
-    //     route: MessageRouters,
-    // },
+    {
+        path: '/messages',
+        route: MessageRouters,
+    },
+    {
+        path: '/chats',
+        route: ChatRoutes,
+    },
     {
         path: '/notifications',
         route: NotificationRouters,

@@ -2,6 +2,7 @@ model Message {
     id         String   @id @default(auto()) @map("_id") @db.ObjectId
     senderId   String   @db.ObjectId
     receiverId String   @db.ObjectId
+    chatId     String   @db.ObjectId
     content    String
     fileUrls   String[] @default([])
     isRead     Boolean  @default(false)
@@ -10,6 +11,7 @@ model Message {
 
     sender   User @relation("SentMessages", fields: [senderId], references: [id])
     receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id])
+    chat     Chat @relation("ChatMessages", fields: [chatId], references: [id])
 
     @@map("messages")
 }
