@@ -2,7 +2,7 @@ import httpStatus from 'http-status';
 import AppError from '../../errors/AppError';
 import { prisma } from '../../utils/prisma';
 import { Message } from '@prisma/client';
-import { calculatePagination } from '../../utils/calculatePagination';
+import { sendEventToUser } from '../../utils/ws-server';
 
 const sendMessage = async (senderId: string, payload: Message) => {
     const findChat = await prisma.chat.findUnique({
@@ -26,6 +26,8 @@ const sendMessage = async (senderId: string, payload: Message) => {
         where: { id: payload.chatId },
         data: { lastMessageId: message.id },
     });
+
+    sendEventToUser(`newMessage::${payload.chatId}`, message);
     return message;
 };
 
