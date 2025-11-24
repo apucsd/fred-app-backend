@@ -2,146 +2,88 @@ import httpStatus from 'http-status';
 import AppError from '../../errors/AppError';
 import { prisma } from '../../utils/prisma';
 import { Message } from '@prisma/client';
-import { getSocket } from '../../utils/socket';
+import { calculatePagination } from '../../utils/calculatePagination';
 
 const sendMessage = async (senderId: string, payload: Message) => {
-    const time = new Date();
-    payload.senderId = senderId;
-
-    const message = await prisma.message.create({
-        data: {
-            senderId: payload.senderId,
-            receiverId: payload.receiverId,
-            content: payload.content,
-            fileUrls: payload.fileUrls,
-            createdAt: time,
+    const findChat = await prisma.chat.findUnique({
+        where: {
+            id: payload.chatId,
+            participants: {
+                has: senderId,
+            },
         },
     });
-    const io = getSocket();
-    io.to(payload.receiverId).emit('message', message);
-    io.to(payload.senderId).emit('message', message);
+    if (!findChat) {
+        throw new AppError(httpStatus.NOT_FOUND, 'You are not a participant or chat does not exist');
+    }
+    const message = await prisma.message.create({
+        data: {
+            ...payload,
+            senderId,
+        },
+    });
+    await prisma.chat.update({
+        where: { id: payload.chatId },
+        data: { lastMessageId: message.id },
+    });
     return message;
 };
 
-const getConversation = async (me: string, other: string) => {
-    await prisma.user.findUniqueOrThrow({ where: { id: other } });
+const getAllMessageByChatId = async (me: string, chatId: string, cursor?: string) => {
+    const findChat = await prisma.chat.findUnique({
+        where: {
+            id: chatId,
+            participants: {
+                has: me,
+            },
+        },
+    });
+    if (!findChat) {
+        throw new AppError(httpStatus.NOT_FOUND, 'You are not a participant or chat does not exist');
+    }
+
+    const PAGE_SIZE = 20;
 
     const messages = await prisma.message.findMany({
-        where: {
-            OR: [
-                { senderId: me, receiverId: other },
-                { senderId: other, receiverId: me },
-            ],
-        },
-        orderBy: { createdAt: 'asc' },
+        where: { chatId },
+        orderBy: { createdAt: 'desc' },
+        take: PAGE_SIZE,
+        ...(cursor && {
+            cursor: { id: cursor },
+            skip: 1,
+        }),
     });
 
     return messages;
 };
 
-const getAllConversationUsers = async (userId: string) => {
-    const result = await prisma.$runCommandRaw({
-        aggregate: 'messages',
-        pipeline: [
-            {
-                $match: {
-                    $or: [{ senderId: { $oid: userId } }, { receiverId: { $oid: userId } }],
-                },
-            },
-            {
-                $sort: { createdAt: -1 },
-            },
-            {
-                $project: {
-                    otherUser: {
-                        $cond: [{ $eq: ['$senderId', { $oid: userId }] }, '$receiverId', '$senderId'],
-                    },
-                    content: 1,
-                    createdAt: 1,
-                },
-            },
-            {
-                $group: {
-                    _id: '$otherUser',
-                    lastMessageAt: { $first: '$createdAt' },
-                    lastMessage: { $first: '$content' },
-                    lastFiles: { $first: '$fileUrls' },
-                },
-            },
-            {
-                $lookup: {
-                    from: 'users',
-                    localField: '_id',
-                    foreignField: '_id',
-                    as: 'userData',
-                },
-            },
-            {
-                $unwind: '$userData',
-            },
-            {
-                $project: {
-                    _id: '$userData._id',
-                    name: '$userData.name',
-                    profile: '$userData.profile',
-                    email: '$userData.email',
-                    lastMessage: 1,
-                    lastMessageAt: 1,
-                },
-            },
-            { $sort: { lastMessageAt: -1 } },
-        ],
-        cursor: {},
-    });
-    const convertedData = (result?.cursor as { firstBatch: any[] })?.firstBatch?.map((item) => {
-        const newData = {
-            ...item,
-            id: item?._id?.$oid,
-            lastMessageAt: item.lastMessageAt.$date,
-        };
-        delete newData._id;
-        return newData;
-    });
-    return convertedData;
-};
-
-const markMessageAsRead = async (messageId: string, userId: string) => {
-    const message = await prisma.message.findUniqueOrThrow({
-        where: { id: messageId },
-    });
-
-    if (message.receiverId !== userId) {
-        throw new AppError(httpStatus.FORBIDDEN, 'You are not allowed to mark this message');
-    }
-
-    const updatedMessage = await prisma.message.update({
-        where: { id: messageId },
+const markMessagesAsRead = async (chatId: string, userId: string) => {
+    const messages = await prisma.message.updateMany({
+        where: { chatId, senderId: { not: userId }, isRead: false },
         data: { isRead: true },
     });
 
-    return updatedMessage;
+    return messages;
 };
 
 const deleteMessage = async (messageId: string, userId: string) => {
-    const message = await prisma.message.findUniqueOrThrow({
-        where: { id: messageId },
+    const message = await prisma.message.findUnique({
+        where: { id: messageId, senderId: userId },
     });
 
-    if (message.senderId !== userId) {
-        throw new AppError(httpStatus.FORBIDDEN, 'You can only delete your own messages');
+    if (!message) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Message not found');
     }
-
-    await prisma.message.delete({
+    const deletedMessage = await prisma.message.update({
         where: { id: messageId },
+        data: { isDeleted: true },
     });
-
-    return { message: 'Message deleted successfully' };
+    return deletedMessage;
 };
 
 export const MessageServices = {
     sendMessage,
-    getConversation,
-    markMessageAsRead,
+    getAllMessageByChatId,
+    markMessagesAsRead,
     deleteMessage,
-    getAllConversationUsers,
 };

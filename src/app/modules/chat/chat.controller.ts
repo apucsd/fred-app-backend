@@ -16,12 +16,13 @@ const createChat = catchAsync(async (req, res) => {
 
 const getMyChats = catchAsync(async (req, res) => {
     const userId = req.user.id;
-    const result = await ChatServices.getMyChats(userId);
+    const result = await ChatServices.getMyChats(userId, req.query);
     sendResponse(res, {
         success: true,
         statusCode: httpStatus.OK,
         message: 'Chats fetched successfully',
-        data: result,
+        meta: result.meta,
+        data: result.data,
     });
 });
 

@@ -1,17 +1,17 @@
 model Message {
-    id         String   @id @default(auto()) @map("_id") @db.ObjectId
-    senderId   String   @db.ObjectId
-    receiverId String   @db.ObjectId
-    chatId     String   @db.ObjectId
-    content    String
-    fileUrls   String[] @default([])
-    isRead     Boolean  @default(false)
-    createdAt  DateTime @default(now())
-    updatedAt  DateTime @updatedAt
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  chatId     String   @db.ObjectId
+  senderId   String   @db.ObjectId
+  text       String
+  file       String? 
+  isRead     Boolean  @default(false)
+  isDeleted  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-    sender   User @relation("SentMessages", fields: [senderId], references: [id])
-    receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id])
-    chat     Chat @relation("ChatMessages", fields: [chatId], references: [id])
+  chat   Chat @relation("ChatMessages", fields: [chatId], references: [id])
+  chatsWithLastMessage Chat[] @relation("ChatLastMessage")
+  sender User @relation("MessageSender", fields: [senderId], references: [id])
 
-    @@map("messages")
+  @@map("messages")
 }

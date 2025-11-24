@@ -5,7 +5,7 @@ import { MessageServices } from './message.service';
 
 const sendMessage = catchAsync(async (req, res) => {
     const senderId = req.user.id;
-    const result = await MessageServices.sendMessage(senderId, req.body);
+    const result = await MessageServices.sendMessage(senderId as string, req.body);
     sendResponse(res, {
         success: true,
         statusCode: httpStatus.CREATED,
@@ -14,11 +14,15 @@ const sendMessage = catchAsync(async (req, res) => {
     });
 });
 
-const getConversation = catchAsync(async (req, res) => {
+const getAllMessageByChatId = catchAsync(async (req, res) => {
     const me = req.user.id;
-    const other = req.params.id;
+    const chatId = req.params.id;
 
-    const result = await MessageServices.getConversation(me as string, other as string);
+    const result = await MessageServices.getAllMessageByChatId(
+        me as string,
+        chatId as string,
+        req.query.cursor as string
+    );
 
     sendResponse(res, {
         success: true,
@@ -27,24 +31,12 @@ const getConversation = catchAsync(async (req, res) => {
         data: result,
     });
 });
-const getAllConversationUsers = catchAsync(async (req, res) => {
-    const me = req.user.id;
 
-    const result = await MessageServices.getAllConversationUsers(me as string);
-
-    sendResponse(res, {
-        success: true,
-        statusCode: httpStatus.OK,
-        message: 'Conversation list fetched successfully',
-        data: result,
-    });
-});
-
-const markMessageAsRead = catchAsync(async (req, res) => {
-    const { messageId } = req.params;
+const markMessagesAsRead = catchAsync(async (req, res) => {
+    const chatId = req.params.id;
     const userId = req.user?.id;
 
-    const result = await MessageServices.markMessageAsRead(messageId, userId);
+    const result = await MessageServices.markMessagesAsRead(chatId as string, userId as string);
 
     sendResponse(res, {
         success: true,
@@ -55,10 +47,10 @@ const markMessageAsRead = catchAsync(async (req, res) => {
 });
 
 const deleteMessage = catchAsync(async (req, res) => {
-    const { messageId } = req.params;
+    const messageId = req.params.id;
     const userId = req.user?.id;
 
-    const result = await MessageServices.deleteMessage(messageId, userId);
+    const result = await MessageServices.deleteMessage(messageId as string, userId as string);
 
     sendResponse(res, {
         success: true,
@@ -70,8 +62,7 @@ const deleteMessage = catchAsync(async (req, res) => {
 
 export const MessageControllers = {
     sendMessage,
-    getConversation,
-    markMessageAsRead,
+    getAllMessageByChatId,
+    markMessagesAsRead,
     deleteMessage,
-    getAllConversationUsers,
 };

@@ -24,8 +24,6 @@ model User {
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
 
-  sentMessages     Message[]          @relation("SentMessages")
-  receivedMessages Message[]          @relation("ReceivedMessages")
   supportTickets   SupportTicket[]    @relation("SupportTickets")
   events Event[] @relation("events")
   music Music[] @relation("Music")
@@ -38,6 +36,7 @@ model User {
   sentNotifications Notification[] @relation("NotificationSender")
   following Follow[] @relation("UserFollowing") 
   followers Follow[] @relation("UserFollowers") 
+  messages Message[] @relation("MessageSender")
 
 
   @@map("users")

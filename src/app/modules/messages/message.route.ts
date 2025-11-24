@@ -8,9 +8,8 @@ const router = express.Router();
 
 router.post('/send', auth('ANY'), validateRequest.body(messageValidation.sendMessage), MessageControllers.sendMessage);
 
-router.get('/conversation/:id', auth('ANY'), MessageControllers.getConversation);
-router.get('/conversation-list', auth('ANY'), MessageControllers.getAllConversationUsers);
-router.patch('/mark-read/:messageId', auth('ANY'), MessageControllers.markMessageAsRead);
-router.delete('/delete/:messageId', auth('ANY'), MessageControllers.deleteMessage);
+router.get('/:id', auth('ANY'), MessageControllers.getAllMessageByChatId);
+router.patch('/:id', auth('ANY'), MessageControllers.markMessagesAsRead);
+router.delete('/:id', auth('ANY'), MessageControllers.deleteMessage);
 
 export const MessageRouters = router;
