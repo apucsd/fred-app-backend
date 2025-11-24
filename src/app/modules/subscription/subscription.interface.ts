@@ -11,7 +11,6 @@ export interface ISubscription
         | 'stripeSubscriptionId'
         | 'cancelAt'
         | 'cancelAtPeriodEnd'
-        | 'paymentStatus'
         | 'status'
         | 'createdAt'
         | 'updatedAt'
