@@ -16,6 +16,7 @@ import { ReviewRouters } from '../modules/review/review.route';
 import { NotificationRouters } from '../modules/notification/notification.route';
 import { FollowRoutes } from '../modules/follow/follow.route';
 import { ChatRoutes } from '../modules/chat/chat.route';
+import { AssetRouters } from '../modules/asset/asset.route';
 const router = express.Router();
 
 const moduleRoutes = [
@@ -39,10 +40,10 @@ const moduleRoutes = [
         path: '/notifications',
         route: NotificationRouters,
     },
-    // {
-    //     path: '/assets',
-    //     route: AssetRouters,
-    // },
+    {
+        path: '/assets',
+        route: AssetRouters,
+    },
     {
         path: '/categories',
         route: CategoryRouters,

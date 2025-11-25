@@ -7,59 +7,41 @@ import { AssetValidation } from './asset.validation';
 import { upload } from '../../middlewares/upload';
 const router = express.Router();
 
-// Single file upload
-router.post(
-  '/upload',
-  upload.single('file'),
-  auth('ANY'),
+router.post('/upload', upload.single('file'), auth('ANY'), AssetController.uploadAsset);
 
-  AssetController.uploadAsset
-);
+router.post('/upload-multiple', upload.array('files'), auth('ANY'), AssetController.uploadMultipleAssets);
 
-// Multiple files upload
-router.post(
-  '/upload-multiple',
-  upload.array('files'),
-  auth('ANY'),
-
-  AssetController.uploadMultipleAssets
-);
-
-// Delete single asset
 router.delete(
-  '/delete',
-  auth('ANY'),
-  validateRequest.body(AssetValidation.deleteAssetSchema),
-  AssetController.deleteAsset
+    '/delete',
+    auth('ANY'),
+    validateRequest.body(AssetValidation.deleteAssetSchema),
+    AssetController.deleteAsset
 );
 
-// Delete multiple assets
 router.delete(
-  '/delete-multiple',
-  auth('ANY'),
-  validateRequest.body(AssetValidation.deleteMultipleAssetsSchema), 
-  AssetController.deleteMultipleAssets
+    '/delete-multiple',
+    auth('ANY'),
+    validateRequest.body(AssetValidation.deleteMultipleAssetsSchema),
+    AssetController.deleteMultipleAssets
 );
 
-// Update single asset
 router.put(
-  '/update',
-  upload.single('file'),
-  auth('ANY'),
-  parseBody,
-  validateRequest.body(AssetValidation.updateAssetSchema), 
-  AssetController.updateAsset
+    '/update',
+    upload.single('file'),
+    auth('ANY'),
+    parseBody,
+    validateRequest.body(AssetValidation.updateAssetSchema),
+    AssetController.updateAsset
 );
 
-// Update multiple assets
 router.put(
-  '/update-multiple',
-  upload.array('files'),
-  auth('ANY'),
+    '/update-multiple',
+    upload.array('files'),
+    auth('ANY'),
 
-  parseBody,
-  validateRequest.body(AssetValidation.updateMultipleAssetsSchema), 
-  AssetController.updateMultipleAssets
+    parseBody,
+    validateRequest.body(AssetValidation.updateMultipleAssetsSchema),
+    AssetController.updateMultipleAssets
 );
 
 export const AssetRouters = router;

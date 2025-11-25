@@ -32,7 +32,7 @@ const deleteAsset = catchAsync(async (req, res) => {
     sendResponse(res, {
         statusCode: httpStatus.OK,
         message: 'File deleted successfully',
-        data: success
+        data: success,
     });
 });
 

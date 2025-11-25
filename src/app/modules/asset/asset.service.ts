@@ -10,7 +10,7 @@ import {
 import AppError from '../../errors/AppError';
 
 const uploadAsset = async (file: Express.Multer.File | undefined) => {
-    if (!file) {
+    if (!file || file.fieldname !== 'file') {
         throw new AppError(httpStatus.BAD_REQUEST, 'Provide at least one asset');
     }
     const location = uploadSingleFile(file);
