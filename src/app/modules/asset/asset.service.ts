@@ -1,14 +1,7 @@
 import httpStatus from 'http-status';
-import {
-    deleteFile,
-    deleteFiles,
-    uploadFiles,
-    uploadSingleFile,
-    updateSingleFile,
-    updateFiles,
-} from '../../utils/uploadFiles';
+import { deleteFile, deleteFiles, uploadFiles, updateSingleFile, updateFiles } from '../../utils/uploadFiles';
 import AppError from '../../errors/AppError';
-import { uploadToMinIO } from '../../utils/uploadToMinIO';
+import { deleteToMinIO, uploadManyToMinIO, uploadToMinIO } from '../../utils/uploadToMinIO';
 
 const uploadAsset = async (file: Express.Multer.File | undefined) => {
     if (!file || file.fieldname !== 'file') {
@@ -25,12 +18,13 @@ const uploadMultipleAssets = async (files: Express.Multer.File[] | undefined) =>
         throw new AppError(httpStatus.BAD_REQUEST, 'Provide at least one asset');
     }
     console.log(files);
-    const locations = uploadFiles(files);
+    const locations = uploadManyToMinIO({ files });
     return locations;
 };
 
 const deleteAsset = async (path: string) => {
-    const success = deleteFile(path);
+    // const success = deleteFile(path);
+    const success = deleteToMinIO(path);
     return success;
 };
 
