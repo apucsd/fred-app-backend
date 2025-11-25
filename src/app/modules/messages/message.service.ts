@@ -26,8 +26,8 @@ const sendMessage = async (senderId: string, payload: Message) => {
         where: { id: payload.chatId },
         data: { lastMessageId: message.id },
     });
-
-    sendEventToUser(`newMessage::${payload.chatId}`, message);
+    const recipientId = findChat.participants.find((participant) => participant !== senderId);
+    sendEventToUser(`message::${recipientId}`, message);
     return message;
 };
 

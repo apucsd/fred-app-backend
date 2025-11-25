@@ -40,12 +40,12 @@ export const getWebSocketServer = () => {
     return wss;
 };
 
-export const sendEventToUser = (event: string, payload: any) => {
+export const sendEventToUser = (event: string, data: any) => {
     const [, userId] = event.split('::');
 
     const client = clients.get(userId);
 
     if (client && client.readyState === WebSocket.OPEN) {
-        client.send(JSON.stringify({ event, payload }));
+        client.send(JSON.stringify({ event, data }));
     }
 };
