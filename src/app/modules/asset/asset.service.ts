@@ -8,13 +8,16 @@ import {
     updateFiles,
 } from '../../utils/uploadFiles';
 import AppError from '../../errors/AppError';
+import { uploadToMinIO } from '../../utils/uploadToMinIO';
 
 const uploadAsset = async (file: Express.Multer.File | undefined) => {
     if (!file || file.fieldname !== 'file') {
         throw new AppError(httpStatus.BAD_REQUEST, 'Provide at least one asset');
     }
-    const location = uploadSingleFile(file);
-    return location;
+    // const location = uploadSingleFile(file);
+    const res = await uploadToMinIO({ file });
+    console.log(res);
+    return res;
 };
 
 const uploadMultipleAssets = async (files: Express.Multer.File[] | undefined) => {

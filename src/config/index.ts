@@ -41,5 +41,8 @@ export default {
         accessKey: process.env.MINIO_ACCESS_KEY,
         secretKey: process.env.MINIO_SECRET_KEY,
         bucket: process.env.MINIO_BUCKET,
+        port: process.env.MINIO_PORT,
+        use_ssl: process.env.MINIO_USE_SSL,
+        team: process.env.TEAM_NAME,
     },
 };
