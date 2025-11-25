@@ -24,4 +24,5 @@ enum NotificationType {
     MESSAGE
     FOLLOW
     SUBSCRIPTION
+    USER_REGISTRATION
 }

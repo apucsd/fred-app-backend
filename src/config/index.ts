@@ -36,4 +36,10 @@ export default {
         port: process.env.REDIS_PORT,
         password: process.env.REDIS_PASSWORD,
     },
+    minio: {
+        endPoint: process.env.MINIO_ENDPOINT,
+        accessKey: process.env.MINIO_ACCESS_KEY,
+        secretKey: process.env.MINIO_SECRET_KEY,
+        bucket: process.env.MINIO_BUCKET,
+    },
 };

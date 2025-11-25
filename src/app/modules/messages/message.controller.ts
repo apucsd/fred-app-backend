@@ -21,7 +21,7 @@ const getAllMessageByChatId = catchAsync(async (req, res) => {
     const result = await MessageServices.getAllMessageByChatId(
         me as string,
         chatId as string,
-        req.query.cursor as string
+        req.query?.cursor as string
     );
 
     sendResponse(res, {

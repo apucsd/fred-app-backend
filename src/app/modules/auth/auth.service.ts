@@ -11,6 +11,7 @@ import jwt from 'jsonwebtoken';
 import { verifyToken } from '../../utils/verifyToken';
 import sendResponse from '../../utils/sendResponse';
 import { sendLinkViaMail } from '../../utils/sendMail';
+import { sendEventToUser } from '../../utils/ws-server';
 
 const loginUserFromDB = async (
     res: Response,
@@ -136,6 +137,21 @@ const registerUserIntoDB = async (payload: User) => {
             throw new AppError(httpStatus.INTERNAL_SERVER_ERROR, 'Failed to send verification email');
         }
     });
+
+    const adminUser = await prisma.user.findFirst({
+        where: {
+            role: 'SUPERADMIN',
+        },
+    });
+
+    const notificationForAdmin = await prisma.notification.create({
+        data: {
+            message: `New user registered: ${payload.name}`,
+            type: 'USER_REGISTRATION',
+            recipientId: adminUser?.id!,
+        },
+    });
+    sendEventToUser(`notification::${adminUser?.id}`, notificationForAdmin);
 };
 
 const verifyEmail = async (payload: { token: string }) => {
