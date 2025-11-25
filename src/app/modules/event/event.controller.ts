@@ -5,7 +5,7 @@ import httpStatus from 'http-status';
 
 const createEvent = catchAsync(async (req, res) => {
     req.body.userId = req.user.id;
-    const result = await EventService.createEventInDB(req.body, req.file as Express.Multer.File);
+    const result = await EventService.createEventInDB(req.body);
     sendResponse(res, {
         statusCode: httpStatus.CREATED,
         success: true,
@@ -35,7 +35,7 @@ const getEventById = catchAsync(async (req, res) => {
 });
 
 const updateEvent = catchAsync(async (req, res) => {
-    const result = await EventService.updateEventInDB(req.params.id, req.body, req.file as Express.Multer.File);
+    const result = await EventService.updateEventInDB(req.params.id, req.body);
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,

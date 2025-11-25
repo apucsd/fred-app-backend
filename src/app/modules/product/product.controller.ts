@@ -4,7 +4,7 @@ import httpStatus from 'http-status';
 import { ProductService } from './product.service';
 const createProduct = catchAsync(async (req, res) => {
     req.body.userId = req?.user?.id;
-    const result = await ProductService.createProductInDB(req.body, req.files as Express.Multer.File[]);
+    const result = await ProductService.createProductInDB(req.body);
     sendResponse(res, {
         statusCode: httpStatus.CREATED,
         success: true,
@@ -14,13 +14,7 @@ const createProduct = catchAsync(async (req, res) => {
 });
 
 const updateProduct = catchAsync(async (req, res) => {
-    const { removeImages, ...rest } = req.body;
-    const result = await ProductService.updateProductInDB(
-        req.params.id,
-        removeImages,
-        rest,
-        req.files as Express.Multer.File[]
-    );
+    const result = await ProductService.updateProductInDB(req.params.id, req.body);
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
