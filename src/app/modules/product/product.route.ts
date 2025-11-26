@@ -6,9 +6,9 @@ import { UserRoleEnum } from '@prisma/client';
 const router = Router();
 
 router.post('/', auth(UserRoleEnum.BUSINESS), ProductController.createProduct);
-router.patch('/:id', auth(UserRoleEnum.BUSINESS), ProductController.updateProduct);
-router.get('/', ProductController.getAllProducts);
-router.get('/:id', ProductController.getSingleProduct);
-router.delete('/:id', auth(UserRoleEnum.BUSINESS), ProductController.deleteProduct);
+router.patch('/:id', auth(UserRoleEnum.BUSINESS, UserRoleEnum.SUPERADMIN), ProductController.updateProduct);
+router.get('/', auth('ANY'), ProductController.getAllProducts);
+router.get('/:id', auth('ANY'), ProductController.getSingleProduct);
+router.delete('/:id', auth(UserRoleEnum.BUSINESS, UserRoleEnum.SUPERADMIN), ProductController.deleteProduct);
 
 export const ProductRouters = router;

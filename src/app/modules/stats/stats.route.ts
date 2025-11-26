@@ -8,5 +8,6 @@ const router = Router();
 router.get('/count', auth(UserRoleEnum.SUPERADMIN), StatsController.getAllStats);
 router.get('/revenue', auth(UserRoleEnum.SUPERADMIN), StatsController.getMonthlyRevenue);
 router.get('/user', auth(UserRoleEnum.SUPERADMIN), StatsController.getMonthlyUser);
+router.get('/payments', auth(UserRoleEnum.SUPERADMIN), StatsController.getAllPayment);
 
 export const statsRouters = router;

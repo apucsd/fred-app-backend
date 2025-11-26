@@ -1,3 +1,4 @@
+import QueryBuilder from '../../builder/QueryBuilder';
 import { monthNames } from '../../constant';
 import { prisma } from '../../utils/prisma';
 
@@ -129,8 +130,34 @@ const getMonthlyUser = async (year: number = 2025): Promise<{ [key: string]: num
     return usersByMonth;
 };
 
+const getAllPaymentFromDB = async (query: Record<string, any>) => {
+    const payments = await new QueryBuilder(prisma.payment, query)
+        .include({
+            user: {
+                select: {
+                    name: true,
+                    email: true,
+                    profile: true,
+                },
+            },
+            package: {
+                select: {
+                    name: true,
+                    price: true,
+                },
+            },
+        })
+        .search(['amount', 'user.name', 'user.email'])
+        .filter()
+        .sort()
+        .paginate()
+        .execute();
+    return payments;
+};
+
 export const StatsService = {
     getAllStatsFromDB,
     getMonthlyRevenue,
     getMonthlyUser,
+    getAllPaymentFromDB,
 };

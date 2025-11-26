@@ -35,8 +35,19 @@ const getMonthlyRevenue = catchAsync(async (req, res) => {
     });
 });
 
+const getAllPayment = catchAsync(async (req, res) => {
+    const stats = await StatsService.getAllPaymentFromDB(req.query);
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Payment retrieved successfully',
+        data: stats,
+    });
+});
+
 export const StatsController = {
     getAllStats,
     getMonthlyUser,
     getMonthlyRevenue,
+    getAllPayment,
 };
