@@ -3,36 +3,29 @@ import { monthNames } from '../../constant';
 import { prisma } from '../../utils/prisma';
 
 const getAllStatsFromDB = async () => {
-    const totalUser = await prisma.user.count({
-        where: {
-            role: 'USER',
-        },
-    });
-    const totalBusiness = await prisma.user.count({
-        where: {
-            role: 'BUSINESS',
-        },
-    });
-    const totalPackage = await prisma.package.count({
-        where: {
-            status: 'ACTIVE',
-        },
-    });
-    const totalSubscription = await prisma.subscription.count({
-        where: {
-            status: 'ACTIVE',
-        },
-    });
-    const totalRevenue = await prisma.payment.aggregate({
-        _sum: {
-            amount: true,
-        },
-    });
-    const totalPayment = await prisma.payment.count();
-    const totalEvent = await prisma.event.count();
-    const totalMusic = await prisma.music.count();
-    const totalProduct = await prisma.product.count();
-    const totalSupportTicket = await prisma.supportTicket.count();
+    const [
+        totalUser,
+        totalBusiness,
+        totalPackage,
+        totalSubscription,
+        totalRevenue,
+        totalPayment,
+        totalEvent,
+        totalMusic,
+        totalProduct,
+        totalSupportTicket,
+    ] = await prisma.$transaction([
+        prisma.user.count({ where: { role: 'USER' } }),
+        prisma.user.count({ where: { role: 'BUSINESS' } }),
+        prisma.package.count({ where: { status: 'ACTIVE' } }),
+        prisma.subscription.count({ where: { status: 'ACTIVE' } }),
+        prisma.payment.aggregate({ _sum: { amount: true } }),
+        prisma.payment.count(),
+        prisma.event.count(),
+        prisma.music.count(),
+        prisma.product.count(),
+        prisma.supportTicket.count(),
+    ]);
 
     return {
         totalUser,
