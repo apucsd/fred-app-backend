@@ -5,6 +5,7 @@ import globalErrorHandler from './app/middlewares/globalErrorHandler';
 import router from './app/routes';
 import path from 'path';
 import { StripeWebHook } from './app/utils/StripeUtils';
+import { httpLogger } from './config/logger';
 const app: Application = express();
 
 app.post('/api/v1/webhook', express.raw({ type: 'application/json' }), StripeWebHook);
@@ -20,6 +21,9 @@ app.use(
         credentials: true,
     })
 );
+
+// HTTP request logger with colored output
+app.use(httpLogger);
 
 //parser
 app.use(express.json());

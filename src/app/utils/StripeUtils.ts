@@ -71,7 +71,7 @@ const handleInvoicePaymentSucceeded = async (invoice: Stripe.Invoice) => {
     const subscriptionId = (invoice as any).subscription as string;
     const stripeCustomerId = (invoice as any).customer as string;
 
-    const user = await prisma.user.findUnique({
+    const user = await prisma.user.findFirst({
         where: { stripeCustomerId },
     });
 
