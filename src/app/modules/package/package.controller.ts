@@ -14,7 +14,7 @@ const createPackage = catchAsync(async (req, res) => {
 });
 
 const getAllPackages = catchAsync(async (req, res) => {
-    const result = await packageServices.getAllPackagesFromDB(req?.user?.id);
+    const result = await packageServices.getAllPackagesFromDB(req?.user?.role);
     sendResponse(res, {
         success: true,
         statusCode: httpStatus.OK,
@@ -24,7 +24,7 @@ const getAllPackages = catchAsync(async (req, res) => {
 });
 
 const getAllPackagesForAdmin = catchAsync(async (req, res) => {
-    const result = await packageServices.getAdminAllPackagesFromDB();
+    const result = await packageServices.getAdminAllPackagesFromDB(req.query as Record<string, string>);
     sendResponse(res, {
         success: true,
         statusCode: httpStatus.OK,

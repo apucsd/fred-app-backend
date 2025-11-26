@@ -4,6 +4,10 @@ model Package {
   description String
   features    String[]
   price       Float
+  discountPercent Float @default(0)
+  productLimit Int @default(0)
+  eventLimit Int @default(0)
+
   type        UserRoleEnum
   interval    PackageInterval
   currency    Currency      @default(usd)

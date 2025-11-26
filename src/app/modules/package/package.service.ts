@@ -2,8 +2,24 @@ import { Currency, UserRoleEnum } from '@prisma/client';
 import { prisma } from '../../utils/prisma';
 import { stripe } from '../../utils/stripe';
 import { IPackage } from './package.interface';
-
+import AppError from '../../errors/AppError';
+import httpStatus from 'http-status';
 const createPackageInToDB = async (payload: IPackage) => {
+    const type = payload.type;
+    if (type === UserRoleEnum.USER) {
+        if (!payload.discountPercent) {
+            throw new AppError(httpStatus.BAD_REQUEST, 'Discount percent is required for USER packages');
+        }
+    }
+    if (type === UserRoleEnum.BUSINESS) {
+        if (!payload.productLimit || !payload.eventLimit) {
+            throw new AppError(
+                httpStatus.BAD_REQUEST,
+                'Product limit and event limit is required for BUSINESS packages'
+            );
+        }
+    }
+
     const product = await stripe.products.create({
         name: payload.name,
         description: payload.description,
@@ -28,25 +44,24 @@ const createPackageInToDB = async (payload: IPackage) => {
     });
     return result;
 };
-const getAllPackagesFromDB = async (id: string) => {
-    const role = await prisma.user.findUnique({
-        where: {
-            id,
-        },
-    });
+const getAllPackagesFromDB = async (role: UserRoleEnum) => {
     const result = await prisma.package.findMany({
         where: {
             status: 'ACTIVE',
-            type: role?.role,
+            type: role,
         },
     });
     return result;
 };
-const getAdminAllPackagesFromDB = async () => {
+const getAdminAllPackagesFromDB = async (query: Record<string, string>) => {
+    let whereCondition: any = {
+        status: 'ACTIVE',
+    };
+    if (query.type) {
+        whereCondition.type = query.type;
+    }
     const result = await prisma.package.findMany({
-        where: {
-            status: 'ACTIVE',
-        },
+        where: whereCondition,
     });
     return result;
 };

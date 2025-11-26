@@ -7,6 +7,11 @@ const packageValidationSchema = z.object({
         description: z.string().min(1, 'Description is required'),
         features: z.array(z.string()).min(1, 'At least one feature is required'),
         price: z.number().min(0, 'Price must be a positive number'),
+        discountPercent: z
+            .number()
+            .min(0, 'Discount percent must be a positive number')
+            .max(100, 'Discount percent must be less than 100')
+            .optional(),
         type: z.nativeEnum(UserRoleEnum),
         interval: z.nativeEnum(PackageInterval),
         currency: z.nativeEnum(Currency).default('usd'),

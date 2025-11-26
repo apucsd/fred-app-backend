@@ -6,6 +6,9 @@ export interface IPackage {
     description: string;
     features: string[];
     price: number;
+    discountPercent: number;
+    productLimit: number;
+    eventLimit: number;
     type: UserRoleEnum;
     interval: PackageInterval;
     currency: Currency;
