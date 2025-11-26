@@ -2,12 +2,15 @@ model Review {
    id String @id @default(auto()) @map("_id") @db.ObjectId
    feedback String
    rating Int
-   userId String @db.ObjectId
-   productId String @db.ObjectId
+   reviewedUserId  String @db.ObjectId @unique
+   reviewAuthorId  String @db.ObjectId @unique
    createdAt DateTime @default(now())
    updatedAt DateTime @updatedAt
-   user User @relation("UserReview", fields: [userId], references: [id])
-   product Product @relation("ProductReview", fields: [productId], references: [id])
+  reviewedUser User @relation("ReviewedUser", fields: [reviewedUserId], references: [id])
+  reviewAuthor User @relation("ReviewAuthor", fields: [reviewAuthorId], references: [id])
+
+
+  
 
 
    @@map("reviews")

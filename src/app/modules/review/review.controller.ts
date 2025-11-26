@@ -6,10 +6,9 @@ import { IReview } from './review.interface';
 import sendResponse from '../../utils/sendResponse';
 
 const createReview = catchAsync(async (req: Request, res: Response) => {
-    req.body.userId = req.user.id;
     const reviewData: IReview = req.body;
 
-    const result = await ReviewService.createReview(reviewData);
+    const result = await ReviewService.createReview(req.user.id, reviewData);
     sendResponse(res, {
         success: true,
         statusCode: httpStatus.OK,

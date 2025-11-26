@@ -21,8 +21,19 @@ const getMyProfileFromDB = async (id: string) => {
             id: id,
         },
     });
+    const myAvgReview = await prisma.review.aggregate({
+        where: {
+            reviewAuthorId: id,
+        },
+        _avg: {
+            rating: true,
+        },
+    });
 
-    return Profile;
+    return {
+        ...Profile,
+        avgReview: myAvgReview._avg.rating,
+    };
 };
 
 const getUserDetailsFromDB = async (id: string) => {
@@ -38,7 +49,18 @@ const getUserDetailsFromDB = async (id: string) => {
             profile: true,
         },
     });
-    return user;
+    const myAvgReview = await prisma.review.aggregate({
+        where: {
+            reviewedUserId: id,
+        },
+        _avg: {
+            rating: true,
+        },
+    });
+    return {
+        ...user,
+        avgReview: myAvgReview._avg.rating,
+    };
 };
 
 const updateProfileImg = async (id: string, file: Express.Multer.File | undefined) => {
