@@ -2,6 +2,7 @@ import httpStatus from 'http-status';
 import QueryBuilder from '../../builder/QueryBuilder';
 import AppError from '../../errors/AppError';
 import { prisma } from '../../utils/prisma';
+import { sendEventToUser } from '../../utils/ws-server';
 
 const toggleFollowInDB = async (userId: string, followingId: string) => {
     if (userId === followingId) {
@@ -32,12 +33,20 @@ const toggleFollowInDB = async (userId: string, followingId: string) => {
         });
         return { message: 'Unfollowed successfully' };
     } else {
-        await prisma.follow.create({
+        const follow = await prisma.follow.create({
             data: {
                 followerId: userId,
                 followingId: followingId,
             },
         });
+        const notification = await prisma.notification.create({
+            data: {
+                type: 'FOLLOW',
+                recipientId: followingId,
+                message: `${userToFollow.name} started following you`,
+            },
+        });
+        sendEventToUser(`notification::${followingId}`, notification);
         return { message: 'Followed successfully' };
     }
 };

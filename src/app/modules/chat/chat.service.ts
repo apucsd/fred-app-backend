@@ -15,6 +15,19 @@ const createChat = async (userId: string, payload: { participants: string[] }) =
     if (isExist) {
         throw new AppError(httpStatus.BAD_REQUEST, 'Chat already exists');
     }
+
+    const isFollowed = await prisma.follow.findUnique({
+        where: {
+            followerId_followingId: {
+                followerId: userId,
+                followingId: payload.participants.find((id) => id !== userId)!,
+            },
+        },
+    });
+    if (!isFollowed) {
+        throw new AppError(httpStatus.FORBIDDEN, 'Please follow the user to create a chat');
+    }
+
     const participants = Array.from(new Set([...payload.participants, userId]));
 
     const result = await prisma.chat.create({
