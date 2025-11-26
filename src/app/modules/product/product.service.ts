@@ -5,11 +5,35 @@ import { IProduct } from './product.interface';
 import httpStatus from 'http-status';
 
 const createProductInDB = async (product: IProduct) => {
-    const result = await prisma.product.create({
-        data: product,
+    const subscription = await prisma.subscription.findUnique({
+        where: { userId: product.userId },
+        include: { package: true },
     });
 
-    return result;
+    if (!subscription) {
+        throw new AppError(httpStatus.NOT_FOUND, 'You dont have any subscription plan to create product');
+    }
+
+    const pkg = subscription.package;
+
+    if (!pkg) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Subscription package not found');
+    }
+
+    const productCount = await prisma.product.count({
+        where: { userId: product.userId },
+    });
+
+    if (pkg.productLimit !== -1 && productCount >= pkg.productLimit) {
+        throw new AppError(
+            httpStatus.FORBIDDEN,
+            'You have reached the product limit. Please upgrade your subscription plan'
+        );
+    }
+
+    return prisma.product.create({
+        data: product,
+    });
 };
 
 const updateProductInDB = async (id: string, payload: Partial<IProduct>) => {
