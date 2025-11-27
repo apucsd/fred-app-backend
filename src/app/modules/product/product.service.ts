@@ -116,6 +116,70 @@ const getAllProductsFromDB = async (userId: string, query: Record<string, any>) 
     };
 };
 
+const getSpecificUserProducts = async (me: string, specificUser: string, query: Record<string, any>) => {
+    const user = await prisma.user.findUnique({
+        where: { id: me, status: 'ACTIVE' },
+    });
+
+    if (!user) {
+        throw new AppError(httpStatus.NOT_FOUND, 'You are not authorized to access this resource');
+    }
+
+    // Check subscription
+    const subscription = await prisma.subscription.findUnique({
+        where: { userId: me, status: 'ACTIVE' },
+        include: { package: true },
+    });
+
+    // Discount percent only for USER role
+    const discountPercent = user.role === 'USER' ? (subscription?.package?.discountPercent ?? 0) : 0;
+
+    // Fetch products
+    const productQuery = new QueryBuilder(prisma.product, { ...query, status: 'ACTIVE' });
+
+    const result = await productQuery
+        .search(['title', 'description'])
+        .include({
+            category: {
+                select: {
+                    id: true,
+                    title: true,
+                },
+            },
+            user: {
+                select: {
+                    id: true,
+                    name: true,
+                    profile: true,
+                },
+            },
+        })
+        .sort()
+        .paginate()
+        .filter()
+        .fields()
+        .execute();
+
+    // Add discounted price to each product
+    const updatedProducts = result.data.map((product: any) => {
+        const price = product.price;
+
+        const discountedPrice = discountPercent > 0 ? price - (price * discountPercent) / 100 : price;
+
+        return {
+            ...product,
+            price,
+            discountPercent,
+            discountedPrice: Number(discountedPrice.toFixed(2)),
+        };
+    });
+
+    return {
+        ...result,
+        data: updatedProducts,
+    };
+};
+
 const getSingleProductFromDB = async (id: string) => {
     const result = await prisma.product.findUniqueOrThrow({
         where: {
@@ -148,4 +212,5 @@ export const ProductService = {
     getSingleProductFromDB,
     deleteProductFromDB,
     updateProductInDB,
+    getSpecificUserProducts,
 };

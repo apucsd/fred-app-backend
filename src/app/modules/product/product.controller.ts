@@ -33,6 +33,16 @@ const getAllProducts = catchAsync(async (req, res) => {
     });
 });
 
+const getSpecificUserProducts = catchAsync(async (req, res) => {
+    const result = await ProductService.getSpecificUserProducts(req.user?.id, req.params.id, req.query);
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Products fetched successfully',
+        data: result,
+    });
+});
+
 const getSingleProduct = catchAsync(async (req, res) => {
     const result = await ProductService.getSingleProductFromDB(req.params.id);
     sendResponse(res, {
@@ -56,6 +66,7 @@ const deleteProduct = catchAsync(async (req, res) => {
 export const ProductController = {
     createProduct,
     getAllProducts,
+    getSpecificUserProducts,
     getSingleProduct,
     deleteProduct,
     updateProduct,
