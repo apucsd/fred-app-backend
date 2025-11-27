@@ -255,8 +255,6 @@ const resendUserVerificationEmail = async (email: string) => {
     } catch {
         throw new AppError(httpStatus.INTERNAL_SERVER_ERROR, 'Failed to send verification OTP');
     }
-
-    return { message: 'Verification OTP sent successfully. Please check your inbox.' };
 };
 
 const forgetPassword = async (email: string) => {
@@ -292,8 +290,6 @@ const forgetPassword = async (email: string) => {
     } catch (error) {
         throw new AppError(httpStatus.INTERNAL_SERVER_ERROR, 'Failed to send password reset OTP');
     }
-
-    return { message: 'Password reset OTP sent successfully. Please check your inbox.' };
 };
 
 const verifyPasswordResetOtp = async (payload: { email: string; otp: string }) => {
@@ -339,7 +335,6 @@ const verifyPasswordResetOtp = async (payload: { email: string; otp: string }) =
     });
 
     return {
-        message: 'OTP verified successfully. You can now reset your password.',
         resetToken: resetToken,
     };
 };

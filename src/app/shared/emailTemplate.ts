@@ -1,4 +1,13 @@
+import config from '../../config';
 import { sendEmail } from '../utils/sendMail';
+
+const emailConfig = {
+    brandLogo: 'https://img.icons8.com/color/48/apple-app-store--v1.png',
+    brandName: 'Fred Mobile App',
+    brandTagline: 'Your Ultimate Destination for Adventure',
+    brandColor: '#654B2E',
+    frontendUrl: '',
+};
 
 // ============ EMAIL TEMPLATE BASE ============
 const createEmailTemplate = (content: string) => {
@@ -7,10 +16,18 @@ const createEmailTemplate = (content: string) => {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Use Google Font (works on Apple Mail & iOS Mail, ignored by Gmail/Outlook safely) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+
+        /* Email-safe font stack */
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont,
+                         'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
     </style>
 </head>
 <body style="background-color: #f3f4f6; margin: 0; padding: 0;">
@@ -28,25 +45,44 @@ const createEmailTemplate = (content: string) => {
 };
 
 // ============ HEADER COMPONENT ============
-const createHeader = (title: string, subtitle: string, logo: string = '🔐') => {
+const createHeader = (title: string, subtitle: string) => {
     return `
     <!-- Header -->
     <tr>
-        <td style="background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%); padding: 50px 40px; text-align: center;">
-            <div style="font-size: 48px; margin-bottom: 16px;">${logo}</div>
-            <p style="color: #E0E7FF; font-size: 14px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px;">OVERLANDING OUTPOST</p>
+        <td style="background: ${emailConfig.brandColor}; padding: 50px 40px; text-align: center;">
+            <div style="font-size: 48px; margin-bottom: 16px;">
+            <img src="${emailConfig.brandLogo}" alt="${emailConfig.brandName}" style="width: 100px; height: 100px;">
+            </div>
+            <p style="color: #E0E7FF; font-size: 14px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px;">${emailConfig.brandName}</p>
             <h1 style="color: #ffffff; font-size: 32px; font-weight: 700; margin: 0 0 8px 0; letter-spacing: -0.5px;">${title}</h1>
             <p style="color: #C7D2FE; font-size: 16px; margin: 0;">${subtitle}</p>
         </td>
     </tr>`;
 };
 
+const createFooter = () => {
+    return `
+    <!-- Footer -->
+    <tr>
+        <td style="padding: 40px 40px 50px; text-align: center;">
+            <p style="color: #6B7280; font-size: 14px; margin: 0 0 8px 0;">Need help?</p>
+            <p style="color: #9CA3AF; font-size: 13px; margin: 0;">
+                Contact our support team at 
+                <a href="${emailConfig.frontendUrl}" style="color: ${emailConfig.brandColor}; text-decoration: none; font-weight: 500;">${emailConfig.brandName}</a>
+            </p>
+             <!-- brand small text -->
+             <p style="color: #6B7280; font-size: 14px; margin: 0 0 8px 0;">${emailConfig.brandTagline}</p>
+
+           
+        </td>
+    </tr>`;
+};
 // ============ OTP EMAIL TEMPLATE ============
 export const sendOtpViaMail = async (to: string, OTP: string) => {
     const otpDigits = OTP.split('');
 
     const content = `
-    ${createHeader('Verify Your E-Mail Address', 'THANKS FOR SIGNING UP!', '📧')}
+    ${createHeader('Verify Your E-Mail Address', 'THANKS FOR SIGNING UP!')}
     
     <!-- Content -->
     <tr>
@@ -92,6 +128,8 @@ export const sendOtpViaMail = async (to: string, OTP: string) => {
             </div>
         </td>
     </tr>
+
+    ${createFooter()}
     
     `;
 
@@ -103,7 +141,7 @@ export const forgetPasswordMail = async (to: string, OTP: string) => {
     const otpDigits = OTP.split('');
 
     const content = `
-    ${createHeader('Forgot Password Request', 'PASSWORD RECOVERY OTP', '🔐')}
+    ${createHeader('Forgot Password Request', 'PASSWORD RECOVERY OTP')}
     
     <!-- Content -->
     <tr>
@@ -136,6 +174,9 @@ export const forgetPasswordMail = async (to: string, OTP: string) => {
             <p style="color: #9CA3AF; font-size: 13px; margin: 0 0 40px 0;">
                 If you did not request a password reset, please ignore this email.
             </p>
+    
+    ${createFooter()}
+    
     `;
 
     const html = createEmailTemplate(content);
@@ -145,7 +186,7 @@ export const forgetPasswordMail = async (to: string, OTP: string) => {
 // ============ LINK VERIFICATION EMAIL TEMPLATE ============
 export const sendLinkViaMail = async (to: string, link: string) => {
     const content = `
-    ${createHeader('Verify Your Account', 'Complete your registration', '✉️')}
+    ${createHeader('Verify Your Account', 'Complete your registration')}
     
     <!-- Content -->
     <tr>
@@ -184,6 +225,7 @@ export const sendLinkViaMail = async (to: string, link: string) => {
             </div>
         </td>
     </tr>
+    ${createFooter()}
     
     `;
 
@@ -196,7 +238,7 @@ export const sendPasswordResetOtp = async (to: string, OTP: string) => {
     const otpDigits = OTP.split('');
 
     const content = `
-    ${createHeader('Reset Your Password', 'PASSWORD RECOVERY', '🔑')}
+    ${createHeader('Reset Your Password', 'PASSWORD RECOVERY')}
     
     <!-- Content -->
     <tr>
@@ -233,6 +275,8 @@ export const sendPasswordResetOtp = async (to: string, OTP: string) => {
             </div>
         </td>
     </tr>
+
+    ${createFooter()}
     
     `;
 
