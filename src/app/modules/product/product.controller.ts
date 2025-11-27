@@ -44,7 +44,7 @@ const getSpecificUserProducts = catchAsync(async (req, res) => {
 });
 
 const getSingleProduct = catchAsync(async (req, res) => {
-    const result = await ProductService.getSingleProductFromDB(req.params.id);
+    const result = await ProductService.getSingleProductFromDB(req.user?.id, req.params.id);
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,

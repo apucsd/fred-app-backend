@@ -180,18 +180,50 @@ const getSpecificUserProducts = async (me: string, specificUser: string, query: 
     };
 };
 
-const getSingleProductFromDB = async (id: string) => {
+const getSingleProductFromDB = async (me: string, id: string) => {
+    const user = await prisma.user.findUnique({
+        where: { id: me, status: 'ACTIVE' },
+    });
+
+    if (!user) {
+        throw new AppError(httpStatus.NOT_FOUND, 'You are not authorized to access this resource');
+    }
+    const subscription = await prisma.subscription.findUnique({
+        where: { userId: me, status: 'ACTIVE' },
+        include: { package: true },
+    });
+
+    const discountPercent = user.role === 'USER' ? (subscription?.package?.discountPercent ?? 0) : 0;
+
     const result = await prisma.product.findUniqueOrThrow({
         where: {
             id,
             status: 'ACTIVE',
         },
         include: {
-            category: true,
-            user: true,
+            category: {
+                select: {
+                    title: true,
+                },
+            },
+            user: {
+                select: {
+                    id: true,
+                    name: true,
+                    profile: true,
+                },
+            },
         },
     });
-    return result;
+
+    const price = result.price;
+    const discountedPrice = discountPercent > 0 ? price - (price * discountPercent) / 100 : price;
+    return {
+        ...result,
+        price,
+        discountPercent,
+        discountedPrice: Number(discountedPrice.toFixed(2)),
+    };
 };
 
 const deleteProductFromDB = async (id: string) => {
