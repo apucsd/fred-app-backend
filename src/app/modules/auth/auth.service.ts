@@ -5,10 +5,11 @@ import config from '../../../config';
 import AppError from '../../errors/AppError';
 import { generateToken } from '../../utils/generateToken';
 import { insecurePrisma, prisma } from '../../utils/prisma';
+import { verifyToken } from '../../utils/verifyToken';
 import { User } from '@prisma/client';
 import { Response } from 'express';
 import sendResponse from '../../utils/sendResponse';
-import { sendOtpViaMail } from '../../shared/emailTemplate';
+import { forgetPasswordMail, sendOtpViaMail } from '../../shared/emailTemplate';
 import { sendEventToUser } from '../../utils/ws-server';
 import { generateOTP } from '../../utils/otp';
 
@@ -76,7 +77,6 @@ const loginUserFromDB = async (
 };
 
 const registerUserIntoDB = async (payload: User) => {
-    //  ============= HASHING PASSWORD =============
     const hashedPassword: string = await bcrypt.hash(payload.password, 12);
 
     //  ============= CHECKING IF USER EXISTS =============
@@ -93,9 +93,6 @@ const registerUserIntoDB = async (payload: User) => {
     if (isUserExistWithTheGmail?.email === payload.email) {
         throw new AppError(httpStatus.CONFLICT, 'User already exists with the email');
     }
-    // if (isUserExistWithTheGmail?.phoneNumber === payload.phoneNumber) {
-    //     throw new AppError(httpStatus.CONFLICT, 'User already exists with the Phone Number');
-    // }
 
     const otp = generateOTP();
     const otpExpiry = new Date(Date.now() + 2 * 60 * 1000); // 2 minutes
@@ -110,7 +107,6 @@ const registerUserIntoDB = async (payload: User) => {
         emailVerificationTokenExpires: null,
     };
 
-    //  ============= CREATING USER =============
     const newUser = await prisma.user.create({
         data: userData,
     });
@@ -292,7 +288,7 @@ const forgetPassword = async (email: string) => {
     });
 
     try {
-        await sendOtpViaMail(email, otp);
+        await forgetPasswordMail(email, otp);
     } catch (error) {
         throw new AppError(httpStatus.INTERNAL_SERVER_ERROR, 'Failed to send password reset OTP');
     }
@@ -300,9 +296,9 @@ const forgetPassword = async (email: string) => {
     return { message: 'Password reset OTP sent successfully. Please check your inbox.' };
 };
 
-const resetPassword = async (payload: { email: string; otp: string; newPassword: string }) => {
-    if (!payload.email || !payload.otp || !payload.newPassword) {
-        throw new AppError(httpStatus.BAD_REQUEST, 'Email, OTP, and new password are required');
+const verifyPasswordResetOtp = async (payload: { email: string; otp: string }) => {
+    if (!payload.email || !payload.otp) {
+        throw new AppError(httpStatus.BAD_REQUEST, 'Email and OTP are required');
     }
 
     const userData = await insecurePrisma.user.findUniqueOrThrow({
@@ -322,21 +318,70 @@ const resetPassword = async (payload: { email: string; otp: string; newPassword:
     if (!userData.otpExpiry || new Date() > userData.otpExpiry) {
         throw new AppError(httpStatus.BAD_REQUEST, 'OTP has expired');
     }
-
-    const newHashedPassword = await bcrypt.hash(payload.newPassword, 12);
+    const resetToken = generateToken(
+        {
+            id: userData.id,
+            email: userData.email,
+            purpose: 'PASSWORD_RESET',
+        },
+        config.jwt.access_secret as Secret,
+        '5m' as SignOptions['expiresIn']
+    );
 
     await prisma.user.update({
         where: {
             email: payload.email,
         },
         data: {
-            password: newHashedPassword,
             otp: null,
             otpExpiry: null,
         },
     });
 
-    return { message: 'Password reset successfully!' };
+    return {
+        message: 'OTP verified successfully. You can now reset your password.',
+        resetToken: resetToken,
+    };
+};
+
+const resetPassword = async (payload: { resetToken: string; newPassword: string }) => {
+    if (!payload.resetToken || !payload.newPassword) {
+        throw new AppError(httpStatus.BAD_REQUEST, 'Reset token and new password are required');
+    }
+
+    let decodedToken: any;
+    try {
+        decodedToken = verifyToken(payload.resetToken, config.jwt.access_secret as Secret);
+    } catch (error) {
+        throw new AppError(httpStatus.UNAUTHORIZED, 'Invalid or expired reset token');
+    }
+
+    if (decodedToken.purpose !== 'PASSWORD_RESET') {
+        throw new AppError(httpStatus.FORBIDDEN, 'Invalid reset token');
+    }
+
+    const userData = await insecurePrisma.user.findUniqueOrThrow({
+        where: {
+            email: decodedToken.email,
+        },
+    });
+
+    if (userData.status === 'BLOCKED') {
+        throw new AppError(httpStatus.FORBIDDEN, 'User account is blocked');
+    }
+
+    const newHashedPassword = await bcrypt.hash(payload.newPassword, 12);
+
+    const result = await prisma.user.update({
+        where: {
+            email: decodedToken.email,
+        },
+        data: {
+            password: newHashedPassword,
+        },
+    });
+
+    return result;
 };
 
 export const AuthServices = {
@@ -346,5 +391,6 @@ export const AuthServices = {
     changePassword,
     resendUserVerificationEmail,
     forgetPassword,
+    verifyPasswordResetOtp,
     resetPassword,
 };

@@ -102,7 +102,7 @@ const forgetPasswordValidationSchema = z.object({
     }),
 });
 
-const resetPasswordValidationSchema = z.object({
+const verifyPasswordResetOtpValidationSchema = z.object({
     body: z.object({
         email: z
             .string({
@@ -121,6 +121,14 @@ const resetPasswordValidationSchema = z.object({
             .regex(/^\d{4}$/, {
                 message: 'OTP must contain only digits',
             }),
+    }),
+});
+
+const resetPasswordValidationSchema = z.object({
+    body: z.object({
+        resetToken: z.string({
+            required_error: 'Reset token is required',
+        }),
         newPassword: z
             .string({
                 required_error: 'New password is required!',
@@ -138,5 +146,6 @@ export const authValidation = {
     resendVerificationEmailValidationSchema,
     changePasswordValidationSchema,
     forgetPasswordValidationSchema,
+    verifyPasswordResetOtpValidationSchema,
     resetPasswordValidationSchema,
 };

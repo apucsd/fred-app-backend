@@ -99,6 +99,49 @@ export const sendOtpViaMail = async (to: string, OTP: string) => {
     await sendEmail(to, html, 'Your Verification Code');
 };
 
+export const forgetPasswordMail = async (to: string, OTP: string) => {
+    const otpDigits = OTP.split('');
+
+    const content = `
+    ${createHeader('Forgot Password Request', 'PASSWORD RECOVERY OTP', '🔐')}
+    
+    <!-- Content -->
+    <tr>
+        <td style="padding: 50px 40px; text-align: center;">
+            <p style="color: #1F2937; font-size: 18px; margin: 0 0 8px 0;">Hello,</p>
+            <p style="color: #6B7280; font-size: 16px; margin: 0 0 40px 0;">
+                You requested to recover your account. Please use the following OTP to continue with resetting your password.
+            </p>
+            
+            <!-- OTP Boxes -->
+            <table cellpadding="0" cellspacing="0" align="center" style="margin: 0 auto 30px;">
+                <tr>
+                    ${otpDigits
+                        .map(
+                            (digit) => `
+                        <td style="padding: 0 6px;">
+                            <div style="width: 60px; height: 70px; border: 2px solid #EF4444; border-radius: 8px; display: flex; align-items: center; justify-content: center; background-color: #FEF2F2;">
+                                <span style="color: #DC2626; font-size: 32px; font-weight: 700; font-family: 'Courier New', monospace;">${digit}</span>
+                            </div>
+                        </td>
+                    `
+                        )
+                        .join('')}
+                </tr>
+            </table>
+
+            <p style="color: #6B7280; font-size: 14px; margin: 0 0 8px 0;">
+                This OTP is valid for the next <strong style="color: #1F2937;">2 minutes</strong>.
+            </p>
+            <p style="color: #9CA3AF; font-size: 13px; margin: 0 0 40px 0;">
+                If you did not request a password reset, please ignore this email.
+            </p>
+    `;
+
+    const html = createEmailTemplate(content);
+    await sendEmail(to, html, 'Your Password Recovery OTP');
+};
+
 // ============ LINK VERIFICATION EMAIL TEMPLATE ============
 export const sendLinkViaMail = async (to: string, link: string) => {
     const content = `
@@ -178,7 +221,7 @@ export const sendPasswordResetOtp = async (to: string, OTP: string) => {
                 </tr>
             </table>
             
-            <p style="color: #6B7280; font-size: 14px; margin: 0 0 8px 0;">This passcode will only be valid for the next <strong style="color: #1F2937;">5 minutes</strong>.</p>
+            <p style="color: #6B7280; font-size: 14px; margin: 0 0 8px 0;">This passcode will only be valid for the next <strong style="color: #1F2937;">2 minutes</strong>.</p>
             <p style="color: #9CA3AF; font-size: 13px; margin: 0 0 40px 0;">If you didn't request a password reset, please ignore this email.</p>
             
             <!-- Security Notice -->

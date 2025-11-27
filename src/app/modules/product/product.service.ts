@@ -52,8 +52,27 @@ const updateProductInDB = async (id: string, payload: Partial<IProduct>) => {
 
     return result;
 };
-const getAllProductsFromDB = async (query: Record<string, any>) => {
+const getAllProductsFromDB = async (userId: string, query: Record<string, any>) => {
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+    });
+
+    if (!user) {
+        throw new AppError(httpStatus.NOT_FOUND, 'You are not authorized to access this resource');
+    }
+
+    // Check subscription
+    const subscription = await prisma.subscription.findUnique({
+        where: { userId },
+        include: { package: true },
+    });
+
+    // Discount percent only for USER role
+    const discountPercent = user.role === 'USER' ? (subscription?.package?.discountPercent ?? 0) : 0;
+
+    // Fetch products
     const productQuery = new QueryBuilder(prisma.product, { ...query, status: 'ACTIVE' });
+
     const result = await productQuery
         .search(['title', 'description'])
         .include({
@@ -70,13 +89,6 @@ const getAllProductsFromDB = async (query: Record<string, any>) => {
                     profile: true,
                 },
             },
-            reviews: {
-                select: {
-                    id: true,
-                    feedback: true,
-                    rating: true,
-                },
-            },
         })
         .sort()
         .paginate()
@@ -84,7 +96,24 @@ const getAllProductsFromDB = async (query: Record<string, any>) => {
         .fields()
         .execute();
 
-    return result;
+    // Add discounted price to each product
+    const updatedProducts = result.data.map((product: any) => {
+        const price = product.price;
+
+        const discountedPrice = discountPercent > 0 ? price - (price * discountPercent) / 100 : price;
+
+        return {
+            ...product,
+            price,
+            discountPercent,
+            discountedPrice: Number(discountedPrice.toFixed(2)),
+        };
+    });
+
+    return {
+        ...result,
+        data: updatedProducts,
+    };
 };
 
 const getSingleProductFromDB = async (id: string) => {

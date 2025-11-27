@@ -37,6 +37,12 @@ router.post(
 );
 
 router.post(
+    '/verify-reset-otp',
+    validateRequest.body(authValidation.verifyPasswordResetOtpValidationSchema),
+    AuthControllers.verifyPasswordResetOtp
+);
+
+router.post(
     '/reset-password',
     validateRequest.body(authValidation.resetPasswordValidationSchema),
     AuthControllers.resetPassword
