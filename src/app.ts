@@ -5,7 +5,7 @@ import globalErrorHandler from './app/middlewares/globalErrorHandler';
 import router from './app/routes';
 import path from 'path';
 import { StripeWebHook } from './app/utils/StripeUtils';
-import { httpLogger } from './config/logger';
+import { httpLogger } from './app/shared/logger';
 const app: Application = express();
 
 app.post('/api/v1/webhook', express.raw({ type: 'application/json' }), StripeWebHook);
@@ -21,15 +21,15 @@ app.use(
         credentials: true,
     })
 );
-
-// HTTP request logger with colored output
+//  ============ LOGGER MIDDLEWARE ============
 app.use(httpLogger);
 
-//parser
+//  ============ PARSER MIDDLEWARE ============
 app.use(express.json());
 app.use(express.json({ limit: '500mb' }));
 app.use(express.urlencoded({ limit: '500mb', extended: true }));
 
+//  ============ ROUTER MIDDLEWARE ============
 app.get('/', (req: Request, res: Response) => {
     res.json({
         status: 'running',
@@ -47,6 +47,7 @@ app.get('/', (req: Request, res: Response) => {
 
 app.use('/api/v1', router);
 
+//  ============ ERROR MIDDLEWARE ============
 app.use(globalErrorHandler);
 app.use('/upload', express.static(path.join(__dirname, 'app', 'upload')));
 app.use((req: Request, res: Response, next: NextFunction) => {

@@ -1,6 +1,7 @@
 import morgan from 'morgan';
 import chalk from 'chalk';
 
+//  ============ LOGGER TOKENS ============
 morgan.token('status-colored', (req, res) => {
     const status = res.statusCode;
     if (status >= 500) return chalk.red.bold(status);
@@ -9,6 +10,7 @@ morgan.token('status-colored', (req, res) => {
     return chalk.green(status);
 });
 
+//  ============ LOGGER TOKENS ============
 morgan.token('method-colored', (req) => {
     const method = req.method ?? 'UNKNOWN';
 
@@ -25,6 +27,7 @@ morgan.token('method-colored', (req) => {
     return color(method);
 });
 
+//  ============ LOGGER TOKENS ============
 morgan.token('response-time-colored', (req, res) => {
     const start = (req as any)._startAt;
     const end = process.hrtime();
@@ -40,8 +43,10 @@ morgan.token('response-time-colored', (req, res) => {
     return chalk.green(`${ms.toFixed(2)}ms`);
 });
 
+//  ============ LOGGER TOKENS ============
 morgan.token('timestamp', () => chalk.blueBright(new Date().toISOString()));
 
+//  ============ LOGGER ============
 export const httpLogger = morgan((tokens, req, res) => {
     return [
         chalk.gray('────────────────────────────────────────────────────────────'),

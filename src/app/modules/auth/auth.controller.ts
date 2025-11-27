@@ -19,7 +19,7 @@ const registerUser = catchAsync(async (req, res) => {
 
     sendResponse(res, {
         statusCode: httpStatus.CREATED,
-        message: 'User registered successfully. Please check your email for the verification link.',
+        message: 'User registered successfully. Please check your email for the verification OTP.',
         data: result,
     });
 });
@@ -40,7 +40,7 @@ const resendUserVerificationEmail = catchAsync(async (req, res) => {
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
-        message: 'Verification email sent successfully',
+        message: 'Verification OTP sent successfully',
         data: result,
     });
 });
@@ -61,7 +61,7 @@ const forgetPassword = catchAsync(async (req, res) => {
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
-        message: 'Password reset link has been sent to your email!',
+        message: 'Password reset OTP has been sent to your email!',
         data: result,
     });
 });

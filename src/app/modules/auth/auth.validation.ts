@@ -43,12 +43,22 @@ const registerUser = z.object({
 
 const verifyEmailValidationSchema = z.object({
     body: z.object({
-        token: z
+        email: z
             .string({
-                required_error: 'Verification token is required',
+                required_error: 'Email is required',
             })
-            .min(1, {
-                message: 'Token cannot be empty',
+            .email({
+                message: 'Use a valid email format',
+            }),
+        otp: z
+            .string({
+                required_error: 'OTP is required',
+            })
+            .length(4, {
+                message: 'OTP must be exactly 4 digits',
+            })
+            .regex(/^\d{4}$/, {
+                message: 'OTP must contain only digits',
             }),
     }),
 });
@@ -94,19 +104,29 @@ const forgetPasswordValidationSchema = z.object({
 
 const resetPasswordValidationSchema = z.object({
     body: z.object({
+        email: z
+            .string({
+                required_error: 'Email is required',
+            })
+            .email({
+                message: 'Use a valid email format',
+            }),
+        otp: z
+            .string({
+                required_error: 'Verification OTP is required',
+            })
+            .length(4, {
+                message: 'OTP must be exactly 4 digits',
+            })
+            .regex(/^\d{4}$/, {
+                message: 'OTP must contain only digits',
+            }),
         newPassword: z
             .string({
                 required_error: 'New password is required!',
             })
             .min(6, {
                 message: 'Password must be at least 6 characters long',
-            }),
-        token: z
-            .string({
-                required_error: 'Verification token is required',
-            })
-            .min(1, {
-                message: 'Token cannot be empty',
             }),
     }),
 });
