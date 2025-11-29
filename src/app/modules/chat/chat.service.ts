@@ -8,7 +8,7 @@ const createChat = async (userId: string, payload: { participants: string[] }) =
     const isExist = await prisma.chat.findFirst({
         where: {
             participants: {
-                has: userId,
+                hasEvery: [userId, ...payload.participants],
             },
         },
     });
@@ -42,7 +42,11 @@ const getMyChats = async (userId: string, query: Record<string, any>) => {
     const { page, limit, skip, sortBy, sortOrder } = calculatePagination(query);
     const { searchTerm } = query;
 
-    const andConditions: Prisma.ChatWhereInput[] = [{ participants: { has: userId } }];
+    const andConditions: Prisma.ChatWhereInput[] = [
+        {
+            participants: { has: userId },
+        },
+    ];
 
     if (searchTerm) {
         const matchingUsers = await prisma.user.findMany({
@@ -54,6 +58,7 @@ const getMyChats = async (userId: string, query: Record<string, any>) => {
             },
             select: { id: true },
         });
+
         const matchingUserIds = matchingUsers.map((u) => u.id);
 
         andConditions.push({
@@ -65,14 +70,20 @@ const getMyChats = async (userId: string, query: Record<string, any>) => {
 
     const whereConditions: Prisma.ChatWhereInput = { AND: andConditions };
 
+    // Fetch chats with last message
     const result = await prisma.chat.findMany({
         where: whereConditions,
         include: {
             messages: {
-                orderBy: {
-                    createdAt: 'desc',
-                },
+                orderBy: { createdAt: 'desc' },
                 take: 1,
+                select: {
+                    id: true,
+                    createdAt: true,
+                    text: true,
+                    isRead: true,
+                    // sender: true,
+                },
             },
         },
         orderBy: {
@@ -82,14 +93,27 @@ const getMyChats = async (userId: string, query: Record<string, any>) => {
         take: limit,
     });
 
+    // Sort unread chats first
+    result.sort((a, b) => {
+        const aUnread = a.messages[0] && !a.messages[0].isRead;
+        const bUnread = b.messages[0] && !b.messages[0].isRead;
+        type ChatSortableFields = 'createdAt' | 'updatedAt';
+
+        // unread first
+        if (aUnread && !bUnread) return -1;
+        if (!aUnread && bUnread) return 1;
+        const sortField = sortBy as ChatSortableFields;
+
+        return sortOrder === 'asc' ? (a[sortField] > b[sortField] ? 1 : -1) : a[sortField] < b[sortField] ? 1 : -1;
+    });
+
     const total = await prisma.chat.count({ where: whereConditions });
 
+    // Populate participants
     const populatedResult = await Promise.all(
         result.map(async (chat) => {
             const participantUsers = await prisma.user.findMany({
-                where: {
-                    id: { in: chat.participants },
-                },
+                where: { id: { in: chat.participants } },
                 select: {
                     id: true,
                     name: true,
@@ -97,6 +121,7 @@ const getMyChats = async (userId: string, query: Record<string, any>) => {
                     profile: true,
                 },
             });
+
             return {
                 ...chat,
                 participants: participantUsers,
