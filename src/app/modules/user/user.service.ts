@@ -15,6 +15,56 @@ const getAllUsersFromDB = async (query: any) => {
     return result;
 };
 
+// }
+const getBusinessUsersFromDB = async (query: any) => {
+    const result = await new QueryBuilder<typeof prisma.user>(prisma.user, {
+        ...query,
+        role: UserRoleEnum.BUSINESS,
+        status: UserStatus.ACTIVE,
+    })
+        .search(['name', 'email'])
+        .filter()
+        .sort()
+        .fields()
+        .exclude()
+        .paginate()
+        .customFields({
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            bio: true,
+            profile: true,
+        })
+        .execute();
+    const userIds = result.data.map((item: User) => item.id);
+
+    // 1. Get avg rating per user
+    const ratings = await prisma.review.groupBy({
+        by: ['reviewedUserId'],
+        _avg: {
+            rating: true,
+        },
+        _count: {
+            rating: true,
+        },
+        where: {
+            reviewedUserId: { in: userIds },
+        },
+    });
+
+    // 2. Map userId → avgRating
+    const ratingMap = Object.fromEntries(ratings.map((r) => [r.reviewedUserId, r._avg.rating]));
+
+    // 3. Attach avgRating to each user
+    result.data = result.data.map((user: User) => ({
+        ...user,
+        avgRating: ratingMap[user.id] ?? 0,
+    }));
+
+    return result;
+};
+
 const getMyProfileFromDB = async (id: string) => {
     const Profile = await prisma.user.findUniqueOrThrow({
         where: {
@@ -132,4 +182,5 @@ export const UserServices = {
     updateUserRoleStatusIntoDB,
     updateProfileStatus,
     updateProfileImg,
+    getBusinessUsersFromDB,
 };

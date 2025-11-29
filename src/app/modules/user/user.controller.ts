@@ -14,6 +14,16 @@ const getAllUsers = catchAsync(async (req, res) => {
     });
 });
 
+const getBusinessUsers = catchAsync(async (req, res) => {
+    const result = await UserServices.getBusinessUsersFromDB(req.query);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        message: 'Business users retrieved successfully',
+        ...result,
+    });
+});
+
 const getMyProfile = catchAsync(async (req, res) => {
     const id = req.user.id;
     const result = await UserServices.getMyProfileFromDB(id);
@@ -96,4 +106,5 @@ export const UserControllers = {
     updateProfileImage,
     updateUserRoleStatus,
     updateUserStatus,
+    getBusinessUsers,
 };

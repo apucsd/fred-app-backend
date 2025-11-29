@@ -10,6 +10,7 @@ const router = express.Router();
 
 router.get('/', auth('SUPERADMIN'), UserControllers.getAllUsers);
 router.get('/me', auth('ANY'), UserControllers.getMyProfile);
+router.get('/business', auth('USER'), UserControllers.getBusinessUsers);
 router.get('/:id', auth('ANY'), UserControllers.getUserDetails);
 
 router.put(
