@@ -1,0 +1,8 @@
+version: '3.8'
+services:
+    backend:
+        image: apucsd/fred-backend:v1
+        ports:
+            - '5000:5000'
+        env_file:
+            - .env

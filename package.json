@@ -9,6 +9,7 @@
     "scripts": {
         "start": "node ./dist/server.js",
         "dev": "ts-node-dev --respawn --transpile-only ./src/server.ts",
+        "dev:docker": "ts-node-dev --respawn --transpile-only --poll src/server.ts",
         "stripe:listen": "stripe listen --forward-to http://10.0.30.163:5000/api/v1/webhook",
         "pm": "npx prisma migrate dev ",
         "pg": "npx prisma generate",
