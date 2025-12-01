@@ -5,7 +5,7 @@ import globalErrorHandler from './app/middlewares/globalErrorHandler';
 import router from './app/routes';
 import path from 'path';
 import { StripeWebHook } from './app/utils/StripeUtils';
-import { httpLogger } from './app/shared/logger';
+import { Morgan } from './app/shared/morgan';
 const app: Application = express();
 
 app.post('/api/v1/webhook', express.raw({ type: 'application/json' }), StripeWebHook);
@@ -22,7 +22,8 @@ app.use(
     })
 );
 //  ============ LOGGER MIDDLEWARE ============
-app.use(httpLogger);
+app.use(Morgan.errorHandler);
+app.use(Morgan.successHandler);
 
 //  ============ PARSER MIDDLEWARE ============
 app.use(express.json());

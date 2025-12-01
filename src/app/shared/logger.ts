@@ -1,60 +1,78 @@
-import morgan from 'morgan';
+import path from 'path';
 import chalk from 'chalk';
+import DailyRotateFile from 'winston-daily-rotate-file';
+const { createLogger, format, transports } = require('winston');
+const { combine, timestamp, label, printf } = format;
 
-//  ============ LOGGER TOKENS ============
-morgan.token('status-colored', (req, res) => {
-    const status = res.statusCode;
-    if (status >= 500) return chalk.red.bold(status);
-    if (status >= 400) return chalk.red(status);
-    if (status >= 300) return chalk.yellow(status);
-    return chalk.green(status);
-});
+const consoleFormat = printf(
+    ({ level, message, label, timestamp }: { level: string; message: string; label: string; timestamp: Date }) => {
+        const date = new Date(timestamp);
+        const hour = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
 
-//  ============ LOGGER TOKENS ============
-morgan.token('method-colored', (req) => {
-    const method = req.method ?? 'UNKNOWN';
+        let coloredLevel = level;
+        if (level.includes('info')) {
+            coloredLevel = chalk.green.bold(level.toUpperCase());
+        } else if (level.includes('error')) {
+            coloredLevel = chalk.red.bold(level.toUpperCase());
+        } else if (level.includes('warn')) {
+            coloredLevel = chalk.yellow.bold(level.toUpperCase());
+        } else if (level.includes('debug')) {
+            coloredLevel = chalk.blue.bold(level.toUpperCase());
+        }
 
-    const colors: Record<string, chalk.Chalk> = {
-        GET: chalk.cyan,
-        POST: chalk.green,
-        PUT: chalk.yellow,
-        PATCH: chalk.magenta,
-        DELETE: chalk.red,
-        UNKNOWN: chalk.white,
-    };
+        const coloredDate = chalk.gray(`${date.toDateString()} ${hour}:${minutes}:${seconds}`);
+        const coloredLabel = chalk.cyan(`[${label}]`);
+        const coloredMessage = level.includes('error') ? chalk.red(message) : chalk.white(message);
 
-    const color = colors[method] || chalk.white;
-    return color(method);
-});
-
-//  ============ LOGGER TOKENS ============
-morgan.token('response-time-colored', (req, res) => {
-    const start = (req as any)._startAt;
-    const end = process.hrtime();
-    let ms = 0;
-
-    if (start) {
-        const diff = [end[0] - start[0], end[1] - start[1]];
-        ms = diff[0] * 1000 + diff[1] / 1e6;
+        return `${coloredDate} ${coloredLabel} ${coloredLevel}: ${coloredMessage}`;
     }
+);
 
-    if (ms > 1000) return chalk.red(`${ms.toFixed(2)}ms`);
-    if (ms > 500) return chalk.yellow(`${ms.toFixed(2)}ms`);
-    return chalk.green(`${ms.toFixed(2)}ms`);
+const fileFormat = printf(
+    ({ level, message, label, timestamp }: { level: string; message: string; label: string; timestamp: Date }) => {
+        const date = new Date(timestamp);
+        const hour = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+
+        return `${date.toDateString()} ${hour}:${minutes}:${seconds} [${label}] ${level.toUpperCase()}: ${message}`;
+    }
+);
+
+const logger = createLogger({
+    level: 'info',
+    format: combine(label({ label: 'MY_SERVER' }), timestamp()),
+    transports: [
+        new transports.Console({
+            format: consoleFormat,
+        }),
+        new DailyRotateFile({
+            filename: path.join(process.cwd(), 'winston', 'success', '%DATE%-success.log'),
+            datePattern: 'DD-MM-YYYY-HH',
+            maxSize: '20m',
+            maxFiles: '1d',
+            format: fileFormat,
+        }),
+    ],
 });
 
-//  ============ LOGGER TOKENS ============
-morgan.token('timestamp', () => chalk.blueBright(new Date().toISOString()));
-
-//  ============ LOGGER ============
-export const httpLogger = morgan((tokens, req, res) => {
-    return [
-        chalk.gray('────────────────────────────────────────────────────────────'),
-        `${chalk.cyan('🚀')}  ${tokens['method-colored'](req, res)} ${chalk.white(tokens.url(req, res))}`,
-        `${chalk.magenta('📦')}  Status: ${tokens['status-colored'](req, res)}`,
-        `${chalk.yellow('⏱')}  Time: ${tokens['response-time-colored'](req, res)}`,
-        `${chalk.green('🔧')}  Method: ${tokens['method-colored'](req, res)}`,
-        `${chalk.blue('📅')}  ${tokens.timestamp(req, res)}`,
-        chalk.gray('────────────────────────────────────────────────────────────'),
-    ].join('\n');
+const errorLogger = createLogger({
+    level: 'error',
+    format: combine(label({ label: 'MY_SERVER' }), timestamp()),
+    transports: [
+        new transports.Console({
+            format: consoleFormat,
+        }),
+        new DailyRotateFile({
+            filename: path.join(process.cwd(), 'winston', 'error', '%DATE%-error.log'),
+            datePattern: 'DD-MM-YYYY-HH',
+            maxSize: '20m',
+            maxFiles: '1d',
+            format: fileFormat,
+        }),
+    ],
 });
+
+export { errorLogger, logger };
