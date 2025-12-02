@@ -45,7 +45,10 @@ const createProductInDB = async (product: IProduct) => {
     return result;
 };
 
-const updateProductInDB = async (id: string, payload: Partial<IProduct>) => {
+const updateProductInDB = async (
+    id: string,
+    payload: Partial<IProduct & { addImages?: string[]; removeImages?: string[] }>
+) => {
     const existing = await prisma.product.findUnique({
         where: { id, status: 'ACTIVE' },
     });
@@ -54,9 +57,31 @@ const updateProductInDB = async (id: string, payload: Partial<IProduct>) => {
         throw new AppError(httpStatus.NOT_FOUND, 'Product not found');
     }
 
+    let updatedImages = existing.images;
+
+    if (payload.images) {
+        updatedImages = payload.images;
+    } else {
+        if (payload.addImages && payload.addImages.length > 0) {
+            updatedImages = [...updatedImages, ...payload.addImages];
+        }
+
+        if (payload.removeImages && payload.removeImages.length > 0) {
+            updatedImages = updatedImages.filter((img) => !payload.removeImages!.includes(img));
+        }
+    }
+
+    if (updatedImages.length === 0) {
+        throw new AppError(httpStatus.BAD_REQUEST, 'Product must have at least one image');
+    }
+    const { addImages, removeImages, images, ...restPayload } = payload;
+
     const result = await prisma.product.update({
         where: { id, status: 'ACTIVE' },
-        data: payload,
+        data: {
+            ...restPayload,
+            images: updatedImages,
+        },
     });
 
     return result;

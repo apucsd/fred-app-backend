@@ -19,6 +19,23 @@ const createProductValidation = z.object({
     }),
 });
 
+const updateProductValidation = z.object({
+    body: z.object({
+        title: z.string().min(3, 'Title must be at least 3 characters long').optional(),
+        description: z.string().min(3, 'Description must be at least 3 characters long').optional(),
+        price: z.number().optional(),
+        images: z
+            .array(z.string().url('Each image must be a valid URL'))
+            .min(1, 'At least one image is required')
+            .optional(),
+        addImages: z.array(z.string().url('Each image must be a valid URL')).optional(),
+        removeImages: z.array(z.string().url('Each image must be a valid URL')).optional(),
+        buyLink: z.string().url('Buy link must be a valid URL').optional(),
+        categoryId: z.string().optional(),
+    }),
+});
+
 export const ProductValidation = {
     createProductValidation,
+    updateProductValidation,
 };
