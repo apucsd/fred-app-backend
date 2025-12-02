@@ -18,6 +18,7 @@ import { FollowRoutes } from '../modules/follow/follow.route';
 import { ChatRoutes } from '../modules/chat/chat.route';
 import { AssetRouters } from '../modules/asset/asset.route';
 import { statsRouters } from '../modules/stats/stats.route';
+import { playlistRouters } from '../modules/playlist/playlist.route';
 const router = express.Router();
 
 const moduleRoutes = [
@@ -96,6 +97,10 @@ const moduleRoutes = [
     {
         path: '/stats',
         route: statsRouters,
+    },
+    {
+        path: '/playlists',
+        route: playlistRouters,
     },
 ];
 

@@ -1,35 +1,88 @@
+import { Music } from '@prisma/client';
 import QueryBuilder from '../../builder/QueryBuilder';
 import AppError from '../../errors/AppError';
 import { prisma } from '../../utils/prisma';
-import { deleteFromDigitalOceanAWS, uploadToDigitalOceanAWS } from '../../utils/uploadToDigitalOceanAWS';
-import { IMusic } from './music.interface';
 import httpStatus from 'http-status';
-const createMusicInDB = async (music: IMusic, files: Express.Multer.File[]) => {
-    const allFiles = files as unknown as { [fieldname: string]: Express.Multer.File[] };
+const createMusicInDB = async (music: Music) => {
+    return await prisma.$transaction(async (tx) => {
+        const user = await tx.user.findUnique({
+            where: { id: music.userId, status: 'ACTIVE' },
+        });
+        if (!user) throw new AppError(httpStatus.NOT_FOUND, 'Active user not found');
+        const playlist = await tx.playlist.findFirst({
+            where: {
+                id: music.playlistId,
+                userId: music.userId,
+                status: 'ACTIVE',
+            },
+        });
+        if (!playlist) throw new AppError(httpStatus.FORBIDDEN, 'Playlist not found or not active');
 
-    const audioFile = allFiles?.['audio']?.[0];
-    const imageFile = allFiles?.['image']?.[0];
-    if (!audioFile) {
-        throw new AppError(httpStatus.BAD_REQUEST, 'Audio is required');
-    }
-    if (!imageFile) {
-        throw new AppError(httpStatus.BAD_REQUEST, 'Image is required');
-    }
-    const { Location: audioLocation } = await uploadToDigitalOceanAWS(audioFile);
-    const { Location: imageLocation } = await uploadToDigitalOceanAWS(imageFile);
-    music.audio = audioLocation;
-    music.image = imageLocation;
-    const result = await prisma.music.create({
-        data: music,
+        const subscription = await tx.subscription.findFirst({
+            where: {
+                userId: music.userId,
+                status: 'ACTIVE',
+            },
+        });
+        if (!subscription) {
+            throw new AppError(httpStatus.PAYMENT_REQUIRED, 'Active subscription required to upload music');
+        }
+
+        return await tx.music.create({
+            data: music,
+        });
     });
-    return result;
 };
 
 const getAllMusicFromDB = async (query: Record<string, any>) => {
     const musicQuery = new QueryBuilder(prisma.music, query);
     const result = await musicQuery
         .search(['title', 'subtitle', 'artist'])
-        .include({ user: true })
+        .include({
+            user: {
+                select: {
+                    id: true,
+                    name: true,
+                    profile: true,
+                },
+            },
+            playlist: {
+                select: {
+                    id: true,
+                    name: true,
+                    description: true,
+                    coverImage: true,
+                },
+            },
+        })
+        .sort()
+        .filter()
+        .fields()
+        .paginate()
+        .execute();
+    return result;
+};
+const getMusicByPlaylistId = async (playlistId: string, query: Record<string, any>) => {
+    const musicQuery = new QueryBuilder(prisma.music, { ...query, playlistId });
+    const result = await musicQuery
+        .search(['title', 'subtitle', 'artist'])
+        .include({
+            user: {
+                select: {
+                    id: true,
+                    name: true,
+                    profile: true,
+                },
+            },
+            playlist: {
+                select: {
+                    id: true,
+                    name: true,
+                    description: true,
+                    coverImage: true,
+                },
+            },
+        })
         .sort()
         .filter()
         .fields()
@@ -39,18 +92,42 @@ const getAllMusicFromDB = async (query: Record<string, any>) => {
 };
 
 const getMusicByIdFromDB = async (id: string) => {
-    const result = await prisma.music.findUniqueOrThrow({
-        where: {
-            id,
-        },
-        include: {
-            user: true,
-        },
+    return await prisma.$transaction(async (transactionClient) => {
+        const music = await transactionClient.music.findUniqueOrThrow({
+            where: {
+                id,
+            },
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        profile: true,
+                    },
+                },
+                playlist: {
+                    select: {
+                        id: true,
+                        name: true,
+                        description: true,
+                        coverImage: true,
+                    },
+                },
+            },
+        });
+        await transactionClient.music.update({
+            where: {
+                id,
+            },
+            data: {
+                totalPlays: music.totalPlays + 1,
+            },
+        });
+        return music;
     });
-    return result;
 };
 
-const updateMusicInDB = async (id: string, payload: Partial<IMusic>, files: Express.Multer.File[]) => {
+const updateMusicInDB = async (id: string, payload: Partial<Music>) => {
     const existingMusic = await prisma.music.findUnique({
         where: {
             id,
@@ -58,20 +135,6 @@ const updateMusicInDB = async (id: string, payload: Partial<IMusic>, files: Expr
     });
     if (!existingMusic) {
         throw new AppError(httpStatus.NOT_FOUND, 'Music not found');
-    }
-
-    const allFiles = files as unknown as { [fieldname: string]: Express.Multer.File[] };
-    const audioFile = allFiles?.['audio']?.[0];
-    const imageFile = allFiles?.['image']?.[0];
-    if (audioFile) {
-        const audioLocation = await uploadToDigitalOceanAWS(audioFile);
-        await deleteFromDigitalOceanAWS(existingMusic.audio);
-        payload.audio = audioLocation.Location;
-    }
-    if (imageFile) {
-        const imageLocation = await uploadToDigitalOceanAWS(imageFile);
-        await deleteFromDigitalOceanAWS(existingMusic.image);
-        payload.image = imageLocation.Location;
     }
 
     const result = await prisma.music.update({
@@ -93,12 +156,6 @@ const deleteMusicInDB = async (id: string) => {
     if (!existingMusic) {
         throw new AppError(httpStatus.NOT_FOUND, 'Music not found');
     }
-    if (existingMusic.audio) {
-        await deleteFromDigitalOceanAWS(existingMusic.audio);
-    }
-    if (existingMusic.image) {
-        await deleteFromDigitalOceanAWS(existingMusic.image);
-    }
     const result = await prisma.music.delete({
         where: {
             id,
@@ -113,4 +170,5 @@ export const MusicService = {
     getMusicByIdFromDB,
     updateMusicInDB,
     deleteMusicInDB,
+    getMusicByPlaylistId,
 };

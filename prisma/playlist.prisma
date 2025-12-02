@@ -1,0 +1,18 @@
+model Playlist {
+    id String @id @default(auto()) @map("_id") @db.ObjectId
+    name String
+    description String
+    coverImage String?
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    userId String @db.ObjectId
+    status PlaylistStatus @default(ACTIVE)
+    user User @relation("Playlist", fields: [userId], references: [id])
+    music Music[] @relation("Playlist")
+
+    @@map("playlist")
+}
+enum PlaylistStatus {
+    ACTIVE
+    INACTIVE
+}

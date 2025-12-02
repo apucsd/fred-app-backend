@@ -1,13 +1,11 @@
-import AppError from '../../errors/AppError';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
-import { uploadToDigitalOceanAWS } from '../../utils/uploadToDigitalOceanAWS';
 import { MusicService } from './music.service';
 import httpStatus from 'http-status';
 
 const createMusic = catchAsync(async (req, res) => {
     req.body.userId = req.user.id;
-    const result = await MusicService.createMusicInDB(req.body, req.files as Express.Multer.File[]);
+    const result = await MusicService.createMusicInDB(req.body);
     sendResponse(res, {
         statusCode: httpStatus.CREATED,
         success: true,
@@ -18,6 +16,16 @@ const createMusic = catchAsync(async (req, res) => {
 
 const getAllMusic = catchAsync(async (req, res) => {
     const result = await MusicService.getAllMusicFromDB(req.query);
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Music fetched successfully',
+        data: result,
+    });
+});
+
+const getMusicByPlaylistId = catchAsync(async (req, res) => {
+    const result = await MusicService.getMusicByPlaylistId(req.params.playlistId, req.query);
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
@@ -37,7 +45,7 @@ const getMusicById = catchAsync(async (req, res) => {
 });
 
 const updateMusic = catchAsync(async (req, res) => {
-    const result = await MusicService.updateMusicInDB(req.params.id, req.body, req.files as Express.Multer.File[]);
+    const result = await MusicService.updateMusicInDB(req.params.id, req.body);
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
@@ -62,4 +70,5 @@ export const MusicController = {
     getMusicById,
     updateMusic,
     deleteMusic,
+    getMusicByPlaylistId,
 };

@@ -1,6 +1,7 @@
 model Music {
     id String @id @default(auto()) @map("_id") @db.ObjectId
     userId String @db.ObjectId
+    playlistId String @db.ObjectId
     title String
     artist String?
     subtitle   String 
@@ -8,12 +9,14 @@ model Music {
     genre String?
     image String
     audio String
+    totalPlays Int @default(0)
     releaseDate DateTime?
     duration Float?
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
     
     user User @relation("Music", fields: [userId], references: [id])
+    playlist Playlist @relation("Playlist", fields: [playlistId], references: [id])
 
     @@map("music") 
 }

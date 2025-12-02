@@ -5,35 +5,44 @@ import { IProduct } from './product.interface';
 import httpStatus from 'http-status';
 
 const createProductInDB = async (product: IProduct) => {
-    const subscription = await prisma.subscription.findUnique({
-        where: { userId: product.userId },
-        include: { package: true },
+    const result = await prisma.$transaction(async (tx) => {
+        const user = await tx.user.findUnique({
+            where: { id: product.userId, status: 'ACTIVE' },
+        });
+
+        if (!user) throw new AppError(httpStatus.NOT_FOUND, 'User not found');
+
+        const category = await tx.category.findUnique({
+            where: { id: product.categoryId },
+        });
+
+        if (!category) throw new AppError(httpStatus.NOT_FOUND, 'Category not found');
+
+        const subscription = await tx.subscription.findUnique({
+            where: { userId: product.userId },
+            include: { package: true },
+        });
+
+        if (!subscription) throw new AppError(httpStatus.NOT_FOUND, 'Subscription not found');
+
+        const pkg = subscription.package;
+
+        if (!pkg) throw new AppError(httpStatus.NOT_FOUND, 'Package not found');
+
+        const productCount = await tx.product.count({
+            where: { userId: product.userId },
+        });
+
+        if (pkg.productLimit !== -1 && productCount >= pkg.productLimit)
+            throw new AppError(
+                httpStatus.FORBIDDEN,
+                'You have reached the product limit. Please upgrade your subscription plan'
+            );
+
+        return tx.product.create({ data: product });
     });
 
-    if (!subscription) {
-        throw new AppError(httpStatus.NOT_FOUND, 'You dont have any subscription plan to create product');
-    }
-
-    const pkg = subscription.package;
-
-    if (!pkg) {
-        throw new AppError(httpStatus.NOT_FOUND, 'Subscription package not found');
-    }
-
-    const productCount = await prisma.product.count({
-        where: { userId: product.userId },
-    });
-
-    if (pkg.productLimit !== -1 && productCount >= pkg.productLimit) {
-        throw new AppError(
-            httpStatus.FORBIDDEN,
-            'You have reached the product limit. Please upgrade your subscription plan'
-        );
-    }
-
-    return prisma.product.create({
-        data: product,
-    });
+    return result;
 };
 
 const updateProductInDB = async (id: string, payload: Partial<IProduct>) => {
@@ -122,7 +131,7 @@ const getSpecificUserProducts = async (me: string, specificUser: string, query: 
     });
 
     if (!user) {
-        throw new AppError(httpStatus.NOT_FOUND, 'You are not authorized to access this resource');
+        throw new AppError(httpStatus.NOT_FOUND, 'User not found');
     }
 
     // Check subscription
@@ -135,7 +144,7 @@ const getSpecificUserProducts = async (me: string, specificUser: string, query: 
     const discountPercent = user.role === 'USER' ? (subscription?.package?.discountPercent ?? 0) : 0;
 
     // Fetch products
-    const productQuery = new QueryBuilder(prisma.product, { ...query, status: 'ACTIVE' });
+    const productQuery = new QueryBuilder(prisma.product, { ...query, status: 'ACTIVE', userId: specificUser });
 
     const result = await productQuery
         .search(['title', 'description'])

@@ -1,5 +1,14 @@
 type ExtractSelect<T> = T extends { findMany(args: { select: infer S }): any } ? S : never;
-
+// [
+//     'search',      // 1. Search across fields
+//     'filter',      // 2. Apply filters
+//     'include',     // 3. Include relations (optional)
+//     'sort',        // 4. Sort results
+//     'paginate',    // 5. Pagination
+//     'fields',      // 6. Select fields (OR customFields)
+//     'exclude',     // 7. Exclude fields
+//     'execute'      // 8. Execute query (must be last)
+// ]
 class QueryBuilder<ModelDelegate extends { findMany: Function; count: Function }> {
     private model: ModelDelegate;
     private query: Record<string, unknown>;

@@ -27,6 +27,7 @@ model User {
   supportTickets   SupportTicket[]    @relation("SupportTickets")
   events Event[] @relation("events")
   music Music[] @relation("Music")
+  playlist Playlist[] @relation("Playlist")
   products Product[] @relation("Products")
   wishlists Wishlist[] @relation("userWishlist")
   subscriptions Subscription[] @relation("UserSubscriptions")
