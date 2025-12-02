@@ -45,46 +45,39 @@ const createProductInDB = async (product: IProduct) => {
     return result;
 };
 
-const updateProductInDB = async (
-    id: string,
-    payload: Partial<IProduct & { addImages?: string[]; removeImages?: string[] }>
-) => {
-    const existing = await prisma.product.findUnique({
-        where: { id, status: 'ACTIVE' },
-    });
+const updateProductInDB = async (id: string, payload: Partial<IProduct> & { removeImages?: string[] }) => {
+    return await prisma.$transaction(async (tx) => {
+        const existing = await tx.product.findUnique({
+            where: { id, status: 'ACTIVE' },
+            select: { images: true },
+        });
 
-    if (!existing) {
-        throw new AppError(httpStatus.NOT_FOUND, 'Product not found');
-    }
-
-    let updatedImages = existing.images;
-
-    if (payload.images) {
-        updatedImages = payload.images;
-    } else {
-        if (payload.addImages && payload.addImages.length > 0) {
-            updatedImages = [...updatedImages, ...payload.addImages];
+        if (!existing) {
+            throw new AppError(httpStatus.NOT_FOUND, 'Product not found');
         }
 
-        if (payload.removeImages && payload.removeImages.length > 0) {
+        let updatedImages = [...existing.images];
+
+        if (payload.removeImages?.length) {
             updatedImages = updatedImages.filter((img) => !payload.removeImages!.includes(img));
         }
-    }
 
-    if (updatedImages.length === 0) {
-        throw new AppError(httpStatus.BAD_REQUEST, 'Product must have at least one image');
-    }
-    const { addImages, removeImages, images, ...restPayload } = payload;
+        if (payload.images?.length) {
+            updatedImages.push(...payload.images);
+        }
 
-    const result = await prisma.product.update({
-        where: { id, status: 'ACTIVE' },
-        data: {
-            ...restPayload,
-            images: updatedImages,
-        },
+        updatedImages = Array.from(new Set(updatedImages));
+
+        const { removeImages, ...dataToUpdate } = payload;
+
+        return await tx.product.update({
+            where: { id },
+            data: {
+                ...dataToUpdate,
+                images: updatedImages,
+            },
+        });
     });
-
-    return result;
 };
 const getAllProductsFromDB = async (userId: string, query: Record<string, any>) => {
     const user = await prisma.user.findUnique({
