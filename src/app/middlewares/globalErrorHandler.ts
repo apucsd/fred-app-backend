@@ -70,6 +70,11 @@ const globalErrorHandler = (err: any, req: Request, res: Response, next: NextFun
             message = 'Expired token';
             errorDetails = { stack: err.stack };
         }
+        if (err.name === 'JsonWebTokenError') {
+            statusCode = 401;
+            message = 'Invalid token';
+            errorDetails = { stack: err.stack };
+        }
     } else if (err instanceof Error) {
         // Handle generic Error
         message = err.message;

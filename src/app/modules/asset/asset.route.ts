@@ -1,26 +1,36 @@
 import express from 'express';
 import { AssetController } from './asset.controller';
-import auth from '../../middlewares/auth';
+// import auth from '../../middlewares/auth';
 import { parseBody } from '../../middlewares/parseBody';
 import validateRequest from '../../middlewares/validateRequest';
 import { AssetValidation } from './asset.validation';
 import { upload } from '../../middlewares/upload';
 const router = express.Router();
 
-router.post('/upload', upload.single('file'), auth('ANY'), AssetController.uploadAsset);
+router.post(
+    '/upload',
+    upload.single('file'),
+    // auth('ANY'),
+    AssetController.uploadAsset
+);
 
-router.post('/upload-multiple', upload.array('files'), auth('ANY'), AssetController.uploadMultipleAssets);
+router.post(
+    '/upload-multiple',
+    upload.array('files'),
+    //  auth('ANY'),
+    AssetController.uploadMultipleAssets
+);
 
 router.delete(
     '/delete',
-    auth('ANY'),
+    // auth('ANY'),
     validateRequest.body(AssetValidation.deleteAssetSchema),
     AssetController.deleteAsset
 );
 
 router.delete(
     '/delete-multiple',
-    auth('ANY'),
+    // auth('ANY'),
     validateRequest.body(AssetValidation.deleteMultipleAssetsSchema),
     AssetController.deleteMultipleAssets
 );
@@ -28,7 +38,7 @@ router.delete(
 router.put(
     '/update',
     upload.single('file'),
-    auth('ANY'),
+    // auth('ANY'),
     parseBody,
     validateRequest.body(AssetValidation.updateAssetSchema),
     AssetController.updateAsset
@@ -37,7 +47,7 @@ router.put(
 router.put(
     '/update-multiple',
     upload.array('files'),
-    auth('ANY'),
+    // auth('ANY'),
 
     parseBody,
     validateRequest.body(AssetValidation.updateMultipleAssetsSchema),

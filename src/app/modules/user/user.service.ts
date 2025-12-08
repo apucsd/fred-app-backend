@@ -97,6 +97,7 @@ const getUserDetailsFromDB = async (id: string) => {
             createdAt: true,
             updatedAt: true,
             profile: true,
+            // reviews: true,
         },
     });
     const myAvgReview = await prisma.review.aggregate({
@@ -106,10 +107,14 @@ const getUserDetailsFromDB = async (id: string) => {
         _avg: {
             rating: true,
         },
+        _count: {
+            rating: true,
+        },
     });
     return {
         ...user,
-        avgReview: myAvgReview._avg.rating,
+        avgReview: myAvgReview._avg?.rating,
+        totalReview: myAvgReview._count?.rating,
     };
 };
 
