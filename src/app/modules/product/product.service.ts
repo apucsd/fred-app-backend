@@ -98,7 +98,22 @@ const getAllProductsFromDB = async (userId: string, query: Record<string, any>) 
     const discountPercent = user.role === 'USER' ? (subscription?.package?.discountPercent ?? 0) : 0;
 
     // Fetch products
-    const productQuery = new QueryBuilder(prisma.product, { ...query, status: 'ACTIVE' });
+
+    const userWishList = await prisma.wishlist.findMany({
+        where: {
+            userId: userId,
+        },
+        select: {
+            productId: true,
+        },
+    });
+
+    const wishlistProductIds = new Set(userWishList.map((wishlist) => wishlist.productId));
+
+    const productQuery = new QueryBuilder(prisma.product, {
+        ...query,
+        status: 'ACTIVE',
+    });
 
     const result = await productQuery
         .search(['title', 'description'])
@@ -134,6 +149,7 @@ const getAllProductsFromDB = async (userId: string, query: Record<string, any>) 
             price,
             discountPercent,
             discountedPrice: Number(discountedPrice.toFixed(2)),
+            isWishlisted: wishlistProductIds.has(product.id),
         };
     });
 
@@ -160,6 +176,17 @@ const getSpecificUserProducts = async (me: string, specificUser: string, query: 
 
     // Discount percent only for USER role
     const discountPercent = user.role === 'USER' ? (subscription?.package?.discountPercent ?? 0) : 0;
+
+    const userWishList = await prisma.wishlist.findMany({
+        where: {
+            userId: me,
+        },
+        select: {
+            productId: true,
+        },
+    });
+
+    const wishlistProductIds = new Set(userWishList.map((wishlist) => wishlist.productId));
 
     // Fetch products
     const productQuery = new QueryBuilder(prisma.product, { ...query, status: 'ACTIVE', userId: specificUser });
@@ -198,6 +225,7 @@ const getSpecificUserProducts = async (me: string, specificUser: string, query: 
             price,
             discountPercent,
             discountedPrice: Number(discountedPrice.toFixed(2)),
+            isWishlisted: wishlistProductIds.has(product.id),
         };
     });
 
