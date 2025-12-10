@@ -33,6 +33,9 @@ const StripeHook = async (rawBody: Buffer, signature: string | string[] | undefi
     }
 
     switch (event.type) {
+        case 'checkout.session.completed':
+            await handlePlaylistPurchase(event.data.object as Stripe.Checkout.Session);
+            break;
         case 'invoice.payment_succeeded':
             await handleInvoicePaymentSucceeded(event.data.object as Stripe.Invoice);
             break;
@@ -225,4 +228,29 @@ const handleSubscriptionDeleted = async (subscription: Stripe.Subscription) => {
     console.log(`Subscription deleted successfully for ${existingSub.userId}`);
 
     return;
+};
+
+// -------------------------------------------------------
+//  checkout.session.completed → Create Playlist Purchase
+// -------------------------------------------------------
+const handlePlaylistPurchase = async (session: Stripe.Checkout.Session) => {
+    const metadata = session.metadata;
+    if (!metadata) return;
+
+    const playlistId = metadata.playlistId;
+    const buyerId = metadata.buyerId;
+
+    if (!playlistId || !buyerId) return;
+
+    const result = await prisma.playlistPurchase.create({
+        data: {
+            playlistId,
+            userId: buyerId,
+            amount: (session.amount_total ?? 0) / 100,
+            stripePiId: session.payment_intent as string,
+            status: 'PAID',
+        },
+    });
+
+    console.log(`Playlist purchased by user: ${buyerId}`);
 };

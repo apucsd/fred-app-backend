@@ -24,7 +24,7 @@ const getAllPlaylists = catchAsync(async (req, res) => {
 });
 
 const getPlaylistById = catchAsync(async (req, res) => {
-    const playlist = await PlaylistService.getPlaylistById(req.params.id);
+    const playlist = await PlaylistService.getPlaylistById(req.params.id, req.user.id);
     sendResponse(res, {
         success: true,
         statusCode: httpStatus.OK,

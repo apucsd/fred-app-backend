@@ -40,6 +40,7 @@ model User {
   following Follow[] @relation("UserFollowing") 
   followers Follow[] @relation("UserFollowers") 
   messages Message[] @relation("MessageSender")
+  playlistPurchase PlaylistPurchase[] @relation("UserPlaylistPurchase")
 
 
   @@map("users")

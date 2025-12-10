@@ -1,0 +1,23 @@
+model PlaylistPurchase {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  playlistId String   @db.ObjectId
+  userId     String   @db.ObjectId
+  amount     Float
+  stripePiId String?
+  status     PlaylistPurchaseStatus @default(PENDING)
+  createdAt  DateTime @default(now())
+
+  playlist   Playlist @relation("PlaylistPurchase", fields: [playlistId], references: [id])
+  user       User     @relation("UserPlaylistPurchase", fields: [userId], references: [id])
+
+  
+
+  @@unique([playlistId, userId])
+
+  @@map("playlist_purchase")
+}
+
+enum PlaylistPurchaseStatus {
+    PENDING
+    PAID
+}

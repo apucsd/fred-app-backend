@@ -3,18 +3,30 @@ import { prisma } from '../../utils/prisma';
 import AppError from '../../errors/AppError';
 import httpStatus from 'http-status';
 import QueryBuilder from '../../builder/QueryBuilder';
+import { stripe } from '../../utils/stripe';
+import config from '../../../config';
 const createPlaylistInDB = async (playlist: Playlist) => {
     return await prisma.$transaction(async (txn) => {
         const user = await txn.user.findUnique({ where: { id: playlist.userId, status: 'ACTIVE' } });
         if (!user) {
             throw new AppError(httpStatus.NOT_FOUND, 'User not found');
         }
+
         const subscription = await txn.subscription.findUnique({ where: { userId: playlist.userId } });
         if (!subscription) {
             throw new AppError(httpStatus.NOT_FOUND, 'You did not subscribe to our service');
         }
         if (subscription.status !== 'ACTIVE') {
             throw new AppError(httpStatus.BAD_REQUEST, 'Please upgrade your subscription to create a playlist');
+        }
+
+        if (!user.stripeAccountId) {
+            throw new AppError(httpStatus.BAD_REQUEST, 'Please connect your stripe account');
+        }
+        const acct = await stripe.accounts.retrieve(user.stripeAccountId!);
+
+        if (!acct.charges_enabled) {
+            throw new AppError(httpStatus.BAD_REQUEST, 'Please complete your stripe connected account onboarding');
         }
         return await txn.playlist.create({ data: playlist });
     });
@@ -46,8 +58,86 @@ const getAllPlaylists = async (query: Record<string, any>) => {
     return playlists;
 };
 
-const getPlaylistById = async (id: string) => {
-    return await prisma.playlist.findUnique({ where: { id, status: 'ACTIVE' } });
+const createPlaylistPaymentLink = async (playlist: Playlist, buyerId: string, sellerId: string) => {
+    const seller = await prisma.user.findUnique({ where: { id: sellerId } });
+    const buyer = await prisma.user.findUnique({ where: { id: buyerId } });
+    const stripeAccountId = seller?.stripeAccountId;
+
+    if (!stripeAccountId) {
+        throw new AppError(httpStatus.BAD_REQUEST, 'Playlist owner has not connected Stripe.');
+    }
+
+    const session = await stripe.checkout.sessions.create(
+        {
+            mode: 'payment',
+            success_url: `${config.base_url_client}/playlist/${playlist.id}?paid=true`,
+            cancel_url: `${config.base_url_client}/playlist/${playlist.id}`,
+            line_items: [
+                {
+                    price_data: {
+                        currency: 'usd',
+                        product_data: {
+                            name: playlist.name,
+                            description: playlist.description,
+                        },
+                        unit_amount: playlist.price * 100,
+                    },
+                    quantity: 1,
+                },
+            ],
+            customer_email: buyer?.email,
+            metadata: {
+                playlistId: playlist.id,
+                buyerId,
+            },
+        },
+        { stripeAccount: stripeAccountId }
+    );
+
+    return session.url;
+};
+
+const getPlaylistById = async (id: string, userId: string) => {
+    const playlist = await prisma.playlist.findFirst({
+        where: { id, status: 'ACTIVE' },
+        include: { user: true, music: true },
+    });
+
+    if (!playlist) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Playlist not found');
+    }
+
+    if (playlist.price === 0) {
+        await prisma.playlist.update({
+            where: { id },
+            data: { views: { increment: 1 } },
+        });
+
+        return {
+            playlist,
+        };
+    }
+
+    const purchase = await prisma.playlistPurchase.findFirst({
+        where: { playlistId: id, userId },
+    });
+
+    if (purchase) {
+        await prisma.playlist.update({
+            where: { id },
+            data: { views: { increment: 1 } },
+        });
+
+        return {
+            playlist,
+        };
+    }
+
+    const paymentUrl = await createPlaylistPaymentLink(playlist, userId, playlist.userId);
+
+    return {
+        paymentUrl,
+    };
 };
 
 const getPlaylistByUserId = async (userId: string) => {

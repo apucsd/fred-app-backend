@@ -15,6 +15,12 @@ const createPlaylistZodSchema = z.object({
                 required_error: 'Cover image is required',
             })
             .url('Cover image must be a valid URL'),
+        price: z
+            .number()
+            .positive({
+                message: 'Price must be a positive number',
+            })
+            .optional(),
     }),
 });
 const updatePlaylistZodSchema = z.object({
