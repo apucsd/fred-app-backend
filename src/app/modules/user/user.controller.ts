@@ -98,6 +98,17 @@ const updateUserStatus = catchAsync(async (req, res) => {
     });
 });
 
+const connectStripeAccount = catchAsync(async (req, res) => {
+    const id = req.user.id;
+    const result = await UserServices.connectStripeAccount(id);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        message: 'Stripe account connected successfully',
+        data: result,
+    });
+});
+
 export const UserControllers = {
     getAllUsers,
     getMyProfile,
@@ -107,4 +118,5 @@ export const UserControllers = {
     updateUserRoleStatus,
     updateUserStatus,
     getBusinessUsers,
+    connectStripeAccount,
 };

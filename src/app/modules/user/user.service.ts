@@ -4,6 +4,8 @@ import QueryBuilder from '../../builder/QueryBuilder';
 import { prisma } from '../../utils/prisma';
 import AppError from '../../errors/AppError';
 import { uploadToDigitalOceanAWS } from '../../utils/uploadToDigitalOceanAWS';
+import { stripe } from '../../utils/stripe';
+import config from '../../../config';
 
 // interface UserWithOptionalPassword extends Omit<User, 'password'> {
 //   password?: string;
@@ -179,6 +181,43 @@ const updateProfileStatus = async (id: string, status: UserStatus) => {
     return result;
 };
 
+// =============CONNECT STRIPE ACCOUNT WITH USER============
+const connectStripeAccount = async (userId: string) => {
+    const user = await prisma.user.findUnique({
+        where: { id: userId, status: 'ACTIVE' },
+    });
+
+    if (!user) throw new AppError(httpStatus.BAD_REQUEST, 'User not found');
+
+    if (user.role !== 'BUSINESS')
+        throw new AppError(httpStatus.BAD_REQUEST, 'Only business accounts can connect Stripe.');
+
+    let stripeAccountId = user.stripeAccountId;
+
+    if (!stripeAccountId) {
+        const account = await stripe.accounts.create({
+            type: 'standard',
+            email: user.email,
+        });
+
+        stripeAccountId = account.id;
+
+        await prisma.user.update({
+            where: { id: userId },
+            data: { stripeAccountId },
+        });
+    }
+
+    const link = await stripe.accountLinks.create({
+        account: stripeAccountId,
+        type: 'account_onboarding',
+        refresh_url: `${config.base_url_client}`,
+        return_url: `${config.base_url_client}`,
+    });
+
+    return link.url;
+};
+
 export const UserServices = {
     getAllUsersFromDB,
     getMyProfileFromDB,
@@ -188,4 +227,5 @@ export const UserServices = {
     updateProfileStatus,
     updateProfileImg,
     getBusinessUsersFromDB,
+    connectStripeAccount,
 };

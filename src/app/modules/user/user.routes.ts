@@ -37,4 +37,6 @@ router.put(
     UserControllers.updateUserStatus
 );
 
+router.post('/connect-stripe-account', auth('BUSINESS'), UserControllers.connectStripeAccount);
+
 export const UserRouters = router;
