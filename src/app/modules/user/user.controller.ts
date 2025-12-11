@@ -104,7 +104,7 @@ const connectStripeAccount = catchAsync(async (req, res) => {
 
     sendResponse(res, {
         statusCode: httpStatus.OK,
-        message: 'Stripe account connected successfully',
+        message: 'Please complete your stripe connected account onboarding',
         data: result,
     });
 });

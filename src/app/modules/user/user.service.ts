@@ -196,8 +196,12 @@ const connectStripeAccount = async (userId: string) => {
 
     if (!stripeAccountId) {
         const account = await stripe.accounts.create({
-            type: 'standard',
+            type: 'express',
             email: user.email,
+            capabilities: {
+                card_payments: { requested: true },
+                transfers: { requested: true },
+            },
         });
 
         stripeAccountId = account.id;
@@ -210,9 +214,9 @@ const connectStripeAccount = async (userId: string) => {
 
     const link = await stripe.accountLinks.create({
         account: stripeAccountId,
-        type: 'account_onboarding',
-        refresh_url: `${config.base_url_client}`,
-        return_url: `${config.base_url_client}`,
+        type: 'account_onboarding', // ← Just always use this
+        refresh_url: `${config.base_url_client}/stripe/refresh`,
+        return_url: `${config.base_url_client}/dashboard`,
     });
 
     return link.url;

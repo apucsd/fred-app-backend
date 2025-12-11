@@ -193,8 +193,8 @@ class QueryBuilder<ModelDelegate extends { findMany: Function; count: Function }
 
         // Run findMany and count in parallel
         const [results, total] = await Promise.all([
-            this.model.findMany(this.prismaQuery),
-            this.model.count({ where: this.prismaQuery.where }),
+            this.model.findMany(this?.prismaQuery),
+            this.model.count({ where: this?.prismaQuery?.where }),
         ]);
 
         // Handle removing primary key from results if requested

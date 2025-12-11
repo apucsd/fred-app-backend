@@ -20,19 +20,33 @@ const createPlaylistInDB = async (playlist: Playlist) => {
             throw new AppError(httpStatus.BAD_REQUEST, 'Please upgrade your subscription to create a playlist');
         }
 
-        if (!user.stripeAccountId) {
-            throw new AppError(httpStatus.BAD_REQUEST, 'Please connect your stripe account');
-        }
-        const acct = await stripe.accounts.retrieve(user.stripeAccountId!);
+        if (playlist.price) {
+            if (!user.stripeAccountId) {
+                throw new AppError(httpStatus.BAD_REQUEST, 'For selling playlist, please connect your stripe account');
+            }
+            const acct = await stripe.accounts.retrieve(user.stripeAccountId!);
+            console.log(acct);
 
-        if (!acct.charges_enabled) {
-            throw new AppError(httpStatus.BAD_REQUEST, 'Please complete your stripe connected account onboarding');
+            if (!acct.charges_enabled) {
+                throw new AppError(httpStatus.BAD_REQUEST, 'Please complete your stripe connected account onboarding');
+            }
+            if (!acct.payouts_enabled) {
+                throw new AppError(
+                    httpStatus.BAD_REQUEST,
+                    'Your Stripe account cannot receive payouts yet. Verification in progress.'
+                );
+            }
         }
         return await txn.playlist.create({ data: playlist });
     });
 };
 
-const getAllPlaylists = async (query: Record<string, any>) => {
+const getAllPlaylists = async (userId: string, query: Record<string, any>) => {
+    const myPurchases = await prisma.playlistPurchase.findMany({ where: { userId } });
+
+    const purchasedIds = new Set(myPurchases.map((purchase) => purchase.playlistId));
+    console.log(purchasedIds);
+
     const playListQuery = new QueryBuilder(prisma.playlist, { ...query, status: 'ACTIVE' });
     const playlists = await playListQuery
         .search(['name', 'description'])
@@ -55,7 +69,19 @@ const getAllPlaylists = async (query: Record<string, any>) => {
         .sort()
         .paginate()
         .execute();
-    return playlists;
+    const updatedPlaylist = playlists.data.map((playlist: Playlist) => {
+        const hasPurchased = purchasedIds.has(playlist.id);
+        return {
+            ...playlist,
+            isPaid: playlist.price > 0 && hasPurchased,
+            isUnlocked: playlist.price === 0 || hasPurchased,
+            requiresPayment: playlist.price > 0 && !hasPurchased,
+        };
+    });
+    return {
+        ...playlists,
+        data: updatedPlaylist,
+    };
 };
 
 const createPlaylistPaymentLink = async (playlist: Playlist, buyerId: string, sellerId: string) => {
@@ -100,7 +126,16 @@ const createPlaylistPaymentLink = async (playlist: Playlist, buyerId: string, se
 const getPlaylistById = async (id: string, userId: string) => {
     const playlist = await prisma.playlist.findFirst({
         where: { id, status: 'ACTIVE' },
-        include: { user: true, music: true },
+        include: {
+            user: {
+                select: {
+                    id: true,
+                    name: true,
+                    profile: true,
+                },
+            },
+            music: true,
+        },
     });
 
     if (!playlist) {
