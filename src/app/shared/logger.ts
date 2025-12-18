@@ -43,7 +43,7 @@ const fileFormat = printf(
 
 const logger = createLogger({
     level: 'info',
-    format: combine(label({ label: 'MY_SERVER' }), timestamp()),
+    format: combine(label({ label: 'FRED_SERVER' }), timestamp()),
     transports: [
         new transports.Console({
             format: consoleFormat,

@@ -34,7 +34,7 @@ app.use(express.urlencoded({ limit: '500mb', extended: true }));
 app.get('/', (req: Request, res: Response) => {
     res.json({
         status: 'running',
-        message: 'Backend server is active and operational.',
+        message: 'iamthatiam server is active and operational.',
         developer: {
             name: 'Apu Sutra Dhar',
             role: 'MERN Stack Developer / Backend Developer',
