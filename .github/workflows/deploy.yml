@@ -22,10 +22,7 @@ jobs:
                       export NVM_DIR="$HOME/.nvm"
                       [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
-                      # Use the Node version (v24.12.0)
-                      nvm use 24
-
-                      cd ${{ secrets.VPS_APP_PATH }}
+                      cd /var/www/iamthatiam/imthatim-backend
 
                       echo "📦 Pulling latest code..."
                       git pull origin main
@@ -37,8 +34,8 @@ jobs:
                       npx prisma generate
 
                       echo "🔄 Reloading fred-backend..."
-                      pm2 reload ${{ secrets.VPS_APP_NAME }} --update-env
+                      pm2 reload fred-backend --update-env || pm2 restart fred-backend
 
                       echo "✅ Deployment completed!"
-                      pm2 status ${{ secrets.VPS_APP_NAME }}
-                      pm2 logs ${{ secrets.VPS_APP_NAME }} --lines 15 --nostream
+                      pm2 status fred-backend
+                      pm2 logs fred-backend --lines 15 --nostream
