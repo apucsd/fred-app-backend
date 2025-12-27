@@ -36,7 +36,7 @@ app.get('/', (req: Request, res: Response) => {
         status: 'running',
         message: 'iamthatiam server is active and operational.',
         developer: {
-            name: 'No Dev',
+            name: 'Apu Sutra Dhar',
             role: 'Full Stack Developer / Backend Developer',
             location: 'Bangladesh',
             portfolio: 'https://apusutradhar.vercel.app/',
