@@ -110,10 +110,16 @@ const getAllProductsFromDB = async (userId: string, query: Record<string, any>) 
 
     const wishlistProductIds = new Set(userWishList.map((wishlist) => wishlist.productId));
 
-    const productQuery = new QueryBuilder(prisma.product, {
+    const queryParams: any = {
         ...query,
         status: 'ACTIVE',
-    });
+    };
+
+    if (user.role === 'USER') {
+        queryParams.isApproved = true;
+    }
+
+    const productQuery = new QueryBuilder(prisma.product, queryParams);
 
     const result = await productQuery
         .search(['title', 'description'])
@@ -189,7 +195,12 @@ const getSpecificUserProducts = async (me: string, specificUser: string, query: 
     const wishlistProductIds = new Set(userWishList.map((wishlist) => wishlist.productId));
 
     // Fetch products
-    const productQuery = new QueryBuilder(prisma.product, { ...query, status: 'ACTIVE', userId: specificUser });
+    const productQuery = new QueryBuilder(prisma.product, {
+        ...query,
+        status: 'ACTIVE',
+        userId: specificUser,
+        isApproved: true,
+    });
 
     const result = await productQuery
         .search(['title', 'description'])
@@ -254,6 +265,7 @@ const getSingleProductFromDB = async (me: string, id: string) => {
         where: {
             id,
             status: 'ACTIVE',
+            isApproved: true,
         },
         include: {
             category: {
@@ -293,6 +305,18 @@ const deleteProductFromDB = async (id: string) => {
     return result;
 };
 
+const approveProduct = async (id: string) => {
+    const result = await prisma.product.update({
+        where: {
+            id,
+        },
+        data: {
+            isApproved: true,
+        },
+    });
+    return result;
+};
+
 export const ProductService = {
     createProductInDB,
     getAllProductsFromDB,
@@ -300,4 +324,5 @@ export const ProductService = {
     deleteProductFromDB,
     updateProductInDB,
     getSpecificUserProducts,
+    approveProduct,
 };

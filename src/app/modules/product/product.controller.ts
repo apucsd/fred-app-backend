@@ -63,6 +63,16 @@ const deleteProduct = catchAsync(async (req, res) => {
     });
 });
 
+const approveProduct = catchAsync(async (req, res) => {
+    const result = await ProductService.approveProduct(req.params.id);
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Product approved successfully',
+        data: result,
+    });
+});
+
 export const ProductController = {
     createProduct,
     getAllProducts,
@@ -70,4 +80,5 @@ export const ProductController = {
     getSingleProduct,
     deleteProduct,
     updateProduct,
+    approveProduct,
 };
