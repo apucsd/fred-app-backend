@@ -45,7 +45,6 @@ const getAllPlaylists = async (userId: string, query: Record<string, any>) => {
     const myPurchases = await prisma.playlistPurchase.findMany({ where: { userId } });
 
     const purchasedIds = new Set(myPurchases.map((purchase) => purchase.playlistId));
-    console.log(purchasedIds);
 
     const playListQuery = new QueryBuilder(prisma.playlist, { ...query, status: 'ACTIVE' });
     const playlists = await playListQuery
@@ -59,22 +58,25 @@ const getAllPlaylists = async (userId: string, query: Record<string, any>) => {
                     profile: true,
                 },
             },
-            music: {
+            _count: {
                 select: {
-                    id: true,
-                    title: true,
+                    music: true,
                 },
             },
         })
         .sort()
         .paginate()
         .execute();
-    const updatedPlaylist = playlists.data.map((playlist: Playlist) => {
+
+    const updatedPlaylist = playlists.data.map((playlist: Playlist & { _count: { music: number } }) => {
+        const { _count, ...playlistWithoutCount } = playlist;
         const hasPurchased = purchasedIds.has(playlist.id);
+        // console.log(hasPurchased);
         return {
-            ...playlist,
-            isPaid: playlist.price > 0 && hasPurchased,
-            isUnlocked: playlist.price === 0 || hasPurchased,
+            ...playlistWithoutCount,
+            musicCount: _count.music,
+            // isPaid: playlist.price > 0 && hasPurchased,
+            // isUnlocked: playlist.price === 0 || hasPurchased,
             requiresPayment: playlist.price > 0 && !hasPurchased,
         };
     });
@@ -149,7 +151,7 @@ const getPlaylistById = async (id: string, userId: string) => {
         });
 
         return {
-            playlist,
+            music: playlist.music,
         };
     }
 
@@ -164,7 +166,7 @@ const getPlaylistById = async (id: string, userId: string) => {
         });
 
         return {
-            playlist,
+            music: playlist.music,
         };
     }
 
