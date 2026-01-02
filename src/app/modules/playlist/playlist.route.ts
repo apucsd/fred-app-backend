@@ -14,7 +14,9 @@ router.post(
     PlaylistController.createPlaylist
 );
 router.get('/', auth('ANY'), PlaylistController.getAllPlaylists);
-router.get('/my-playlists/:userId', auth(UserRoleEnum.BUSINESS), PlaylistController.getPlaylistByUserId);
+router.get('/my-playlists', auth(UserRoleEnum.BUSINESS), PlaylistController.getMyPlaylists);
+router.get('/my-playlists/:id', auth(UserRoleEnum.BUSINESS), PlaylistController.getMyPlaylistById);
+router.get('/payment-details/:sessionId', auth('ANY'), PlaylistController.getPaymentDetails);
 router.get('/:id', auth('ANY'), PlaylistController.getPlaylistById);
 router.patch(
     '/:id',

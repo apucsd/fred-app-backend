@@ -4,6 +4,7 @@ model PlaylistPurchase {
   userId     String   @db.ObjectId
   amount     Float
   stripePiId String?
+   stripeSessionId   String?  // Add this field
   status     PlaylistPurchaseStatus @default(PENDING)
   createdAt  DateTime @default(now())
 

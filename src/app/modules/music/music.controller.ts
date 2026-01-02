@@ -24,6 +24,16 @@ const getAllMusic = catchAsync(async (req, res) => {
     });
 });
 
+const getMyMusic = catchAsync(async (req, res) => {
+    const result = await MusicService.getMyMusicFromDB(req.user.id, req.query);
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Music fetched successfully',
+        data: result,
+    });
+});
+
 const getMusicByPlaylistId = catchAsync(async (req, res) => {
     const result = await MusicService.getMusicByPlaylistId(req.params.playlistId, req.query);
     sendResponse(res, {
@@ -71,4 +81,5 @@ export const MusicController = {
     updateMusic,
     deleteMusic,
     getMusicByPlaylistId,
+    getMyMusic,
 };

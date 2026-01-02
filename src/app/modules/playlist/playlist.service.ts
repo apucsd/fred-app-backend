@@ -6,39 +6,37 @@ import QueryBuilder from '../../builder/QueryBuilder';
 import { stripe } from '../../utils/stripe';
 import config from '../../../config';
 const createPlaylistInDB = async (playlist: Playlist) => {
-    return await prisma.$transaction(async (txn) => {
-        const user = await txn.user.findUnique({ where: { id: playlist.userId, status: 'ACTIVE' } });
-        if (!user) {
-            throw new AppError(httpStatus.NOT_FOUND, 'User not found');
-        }
+    const user = await prisma.user.findUnique({ where: { id: playlist.userId, status: 'ACTIVE' } });
+    if (!user) {
+        throw new AppError(httpStatus.NOT_FOUND, 'User not found');
+    }
 
-        const subscription = await txn.subscription.findUnique({ where: { userId: playlist.userId } });
-        if (!subscription) {
-            throw new AppError(httpStatus.NOT_FOUND, 'You did not subscribe to our service');
-        }
-        if (subscription.status !== 'ACTIVE') {
-            throw new AppError(httpStatus.BAD_REQUEST, 'Please upgrade your subscription to create a playlist');
-        }
+    const subscription = await prisma.subscription.findUnique({ where: { userId: playlist.userId } });
+    if (!subscription) {
+        throw new AppError(httpStatus.NOT_FOUND, 'You did not subscribe to our service');
+    }
+    if (subscription.status !== 'ACTIVE') {
+        throw new AppError(httpStatus.BAD_REQUEST, 'Please upgrade your subscription to create a playlist');
+    }
 
-        if (playlist.price) {
-            if (!user.stripeAccountId) {
-                throw new AppError(httpStatus.BAD_REQUEST, 'For selling playlist, please connect your stripe account');
-            }
-            const acct = await stripe.accounts.retrieve(user.stripeAccountId!);
-            console.log(acct);
-
-            if (!acct.charges_enabled) {
-                throw new AppError(httpStatus.BAD_REQUEST, 'Please complete your stripe connected account onboarding');
-            }
-            if (!acct.payouts_enabled) {
-                throw new AppError(
-                    httpStatus.BAD_REQUEST,
-                    'Your Stripe account cannot receive payouts yet. Verification in progress.'
-                );
-            }
+    if (playlist.price) {
+        if (!user.stripeAccountId) {
+            throw new AppError(httpStatus.BAD_REQUEST, 'For selling playlist, please connect your stripe account');
         }
-        return await txn.playlist.create({ data: playlist });
-    });
+        const acct = await stripe.accounts.retrieve(user.stripeAccountId!);
+
+        if (!acct.charges_enabled) {
+            throw new AppError(httpStatus.BAD_REQUEST, 'Please complete your stripe connected account onboarding');
+        }
+        if (!acct.payouts_enabled) {
+            throw new AppError(
+                httpStatus.BAD_REQUEST,
+                'Your Stripe account cannot receive payouts yet. Verification in progress.'
+            );
+        }
+    }
+
+    return await prisma.playlist.create({ data: playlist });
 };
 
 const getAllPlaylists = async (userId: string, query: Record<string, any>) => {
@@ -86,6 +84,41 @@ const getAllPlaylists = async (userId: string, query: Record<string, any>) => {
     };
 };
 
+const getMyPlaylists = async (userId: string, query: Record<string, any>) => {
+    const playListQuery = new QueryBuilder(prisma.playlist, { ...query, status: 'ACTIVE', userId });
+    const playlists = await playListQuery
+        .search(['name', 'description'])
+        .filter()
+        .include({
+            user: {
+                select: {
+                    id: true,
+                    name: true,
+                    profile: true,
+                },
+            },
+            _count: {
+                select: {
+                    music: true,
+                },
+            },
+        })
+        .sort()
+        .paginate()
+        .execute();
+
+    const updatedPlaylist = playlists.data.map((playlist: Playlist & { _count: { music: number } }) => {
+        const { _count, ...playlistWithoutCount } = playlist;
+        return {
+            ...playlistWithoutCount,
+            musicCount: _count.music,
+        };
+    });
+    return {
+        ...playlists,
+        data: updatedPlaylist,
+    };
+};
 const createPlaylistPaymentLink = async (playlist: Playlist, buyerId: string, sellerId: string) => {
     const seller = await prisma.user.findUnique({ where: { id: sellerId } });
     const buyer = await prisma.user.findUnique({ where: { id: buyerId } });
@@ -98,8 +131,8 @@ const createPlaylistPaymentLink = async (playlist: Playlist, buyerId: string, se
     const session = await stripe.checkout.sessions.create(
         {
             mode: 'payment',
-            success_url: `${config.base_url_client}/playlist/${playlist.id}?paid=true`,
-            cancel_url: `${config.base_url_client}/playlist/${playlist.id}`,
+            success_url: `${config.base_url_client}/success/session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `${config.base_url_client}/cancel/session_id={CHECKOUT_SESSION_ID}`,
             line_items: [
                 {
                     price_data: {
@@ -177,6 +210,28 @@ const getPlaylistById = async (id: string, userId: string) => {
     };
 };
 
+const getMyPlaylistById = async (id: string, userId: string) => {
+    const playlist = await prisma.playlist.findFirst({
+        where: { id, userId, status: 'ACTIVE' },
+        include: {
+            user: {
+                select: {
+                    id: true,
+                    name: true,
+                    profile: true,
+                },
+            },
+            music: true,
+        },
+    });
+
+    if (!playlist) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Playlist not found');
+    }
+
+    return playlist;
+};
+
 const getPlaylistByUserId = async (userId: string) => {
     return await prisma.playlist.findMany({ where: { userId, status: 'ACTIVE' } });
 };
@@ -197,6 +252,20 @@ const deletePlaylistInDB = async (id: string) => {
     return res;
 };
 
+const getPaymentDetailsFromDB = async (sessionId: string) => {
+    const purchase = await prisma.playlistPurchase.findFirst({
+        where: { stripeSessionId: sessionId },
+        include: { playlist: { include: { user: true } } },
+    });
+
+    if (!purchase) {
+        throw new AppError(httpStatus.NOT_FOUND, 'Payment not found');
+    }
+    return {
+        ...purchase,
+    };
+};
+
 export const PlaylistService = {
     createPlaylistInDB,
     getAllPlaylists,
@@ -204,4 +273,7 @@ export const PlaylistService = {
     getPlaylistByUserId,
     updatePlaylistInDB,
     deletePlaylistInDB,
+    getPaymentDetailsFromDB,
+    getMyPlaylists,
+    getMyPlaylistById,
 };

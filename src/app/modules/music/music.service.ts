@@ -4,38 +4,64 @@ import AppError from '../../errors/AppError';
 import { prisma } from '../../utils/prisma';
 import httpStatus from 'http-status';
 const createMusicInDB = async (music: Music) => {
-    return await prisma.$transaction(async (tx) => {
-        const user = await tx.user.findUnique({
-            where: { id: music.userId, status: 'ACTIVE' },
-        });
-        if (!user) throw new AppError(httpStatus.NOT_FOUND, 'Active user not found');
-        const playlist = await tx.playlist.findFirst({
-            where: {
-                id: music.playlistId,
-                userId: music.userId,
-                status: 'ACTIVE',
-            },
-        });
-        if (!playlist) throw new AppError(httpStatus.FORBIDDEN, 'Playlist not found or not active');
+    const user = await prisma.user.findUnique({
+        where: { id: music.userId, status: 'ACTIVE' },
+    });
+    if (!user) throw new AppError(httpStatus.NOT_FOUND, 'Active user not found');
+    const playlist = await prisma.playlist.findFirst({
+        where: {
+            id: music.playlistId,
+            userId: music.userId,
+            status: 'ACTIVE',
+        },
+    });
+    if (!playlist) throw new AppError(httpStatus.FORBIDDEN, 'Playlist not found or not active');
 
-        const subscription = await tx.subscription.findFirst({
-            where: {
-                userId: music.userId,
-                status: 'ACTIVE',
-            },
-        });
-        if (!subscription) {
-            throw new AppError(httpStatus.PAYMENT_REQUIRED, 'Active subscription required to upload music');
-        }
+    const subscription = await prisma.subscription.findFirst({
+        where: {
+            userId: music.userId,
+            status: 'ACTIVE',
+        },
+    });
+    if (!subscription) {
+        throw new AppError(httpStatus.PAYMENT_REQUIRED, 'Active subscription required to upload music');
+    }
 
-        return await tx.music.create({
-            data: music,
-        });
+    return await prisma.music.create({
+        data: music,
     });
 };
 
 const getAllMusicFromDB = async (query: Record<string, any>) => {
     const musicQuery = new QueryBuilder(prisma.music, query);
+    const result = await musicQuery
+        .search(['title', 'subtitle', 'artist'])
+        .include({
+            user: {
+                select: {
+                    id: true,
+                    name: true,
+                    profile: true,
+                },
+            },
+            playlist: {
+                select: {
+                    id: true,
+                    name: true,
+                    description: true,
+                    coverImage: true,
+                },
+            },
+        })
+        .sort()
+        .filter()
+        .fields()
+        .paginate()
+        .execute();
+    return result;
+};
+const getMyMusicFromDB = async (userId: string, query: Record<string, any>) => {
+    const musicQuery = new QueryBuilder(prisma.music, { ...query, userId });
     const result = await musicQuery
         .search(['title', 'subtitle', 'artist'])
         .include({
@@ -171,4 +197,5 @@ export const MusicService = {
     updateMusicInDB,
     deleteMusicInDB,
     getMusicByPlaylistId,
+    getMyMusicFromDB,
 };

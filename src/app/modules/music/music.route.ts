@@ -22,6 +22,7 @@ router.post(
 );
 
 router.get('/', auth('ANY'), MusicController.getAllMusic);
+router.get('/my-music', auth(UserRoleEnum.BUSINESS), MusicController.getMyMusic);
 router.get('/playlist/:playlistId', auth('ANY'), MusicController.getMusicByPlaylistId);
 router.get('/:id', auth('ANY'), MusicController.getMusicById);
 router.patch(

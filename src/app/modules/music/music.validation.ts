@@ -3,7 +3,7 @@ import { z } from 'zod';
 const createMusicSchema = z.object({
     body: z.object({
         title: z.string().min(1, 'Title is required'),
-        subtitle: z.string().min(1, 'Subtitle is required'),
+        // subtitle: z.string().min(1, 'Subtitle is required'),
         playlistId: z.string().min(1, 'Playlist ID is required'),
         image: z
             .string({

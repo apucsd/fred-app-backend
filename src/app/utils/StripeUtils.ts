@@ -248,6 +248,7 @@ const handlePlaylistPurchase = async (session: Stripe.Checkout.Session) => {
             userId: buyerId,
             amount: (session.amount_total ?? 0) / 100,
             stripePiId: session.payment_intent as string,
+            stripeSessionId: session.id,
             status: 'PAID',
         },
     });

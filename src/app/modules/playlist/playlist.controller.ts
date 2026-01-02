@@ -23,6 +23,17 @@ const getAllPlaylists = catchAsync(async (req, res) => {
     });
 });
 
+const getMyPlaylists = catchAsync(async (req, res) => {
+    const { data, meta } = await PlaylistService.getMyPlaylists(req.user.id, req.query);
+    sendResponse(res, {
+        success: true,
+        statusCode: httpStatus.OK,
+        message: 'Playlists retrieved successfully',
+        data,
+        meta,
+    });
+});
+
 const getPlaylistById = catchAsync(async (req, res) => {
     const playlist = await PlaylistService.getPlaylistById(req.params.id, req.user.id);
     sendResponse(res, {
@@ -35,6 +46,16 @@ const getPlaylistById = catchAsync(async (req, res) => {
 
 const getPlaylistByUserId = catchAsync(async (req, res) => {
     const playlist = await PlaylistService.getPlaylistByUserId(req.params.userId);
+    sendResponse(res, {
+        success: true,
+        statusCode: httpStatus.OK,
+        message: 'Playlist retrieved successfully',
+        data: playlist,
+    });
+});
+
+const getMyPlaylistById = catchAsync(async (req, res) => {
+    const playlist = await PlaylistService.getMyPlaylistById(req.params.id, req.user.id);
     sendResponse(res, {
         success: true,
         statusCode: httpStatus.OK,
@@ -63,6 +84,16 @@ const deletePlaylist = catchAsync(async (req, res) => {
     });
 });
 
+const getPaymentDetails = catchAsync(async (req, res) => {
+    const paymentDetails = await PlaylistService.getPaymentDetailsFromDB(req.params.sessionId);
+    sendResponse(res, {
+        success: true,
+        statusCode: httpStatus.OK,
+        message: 'Payment details retrieved successfully',
+        data: paymentDetails,
+    });
+});
+
 export const PlaylistController = {
     createPlaylist,
     getAllPlaylists,
@@ -70,4 +101,7 @@ export const PlaylistController = {
     getPlaylistByUserId,
     updatePlaylist,
     deletePlaylist,
+    getPaymentDetails,
+    getMyPlaylists,
+    getMyPlaylistById,
 };

@@ -4,7 +4,7 @@ model Music {
     playlistId String @db.ObjectId
     title String
     artist String?
-    subtitle   String 
+    subtitle String?
     album String?
     genre String?
     image String

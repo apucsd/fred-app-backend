@@ -17,7 +17,7 @@ const createPlaylistZodSchema = z.object({
             .url('Cover image must be a valid URL'),
         price: z
             .number()
-            .positive({
+            .refine((value) => value >= 0, {
                 message: 'Price must be a positive number',
             })
             .optional(),
