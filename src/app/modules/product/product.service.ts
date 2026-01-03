@@ -113,11 +113,8 @@ const getAllProductsFromDB = async (userId: string, query: Record<string, any>) 
     const queryParams: any = {
         ...query,
         status: 'ACTIVE',
+        isApproved: true,
     };
-
-    if (user.role === 'USER') {
-        queryParams.isApproved = true;
-    }
 
     const productQuery = new QueryBuilder(prisma.product, queryParams);
 
@@ -163,6 +160,27 @@ const getAllProductsFromDB = async (userId: string, query: Record<string, any>) 
         ...result,
         data: updatedProducts,
     };
+};
+const getMyProductsFromDB = async (userId: string, query: Record<string, any>) => {
+    const user = await prisma.user.findUnique({
+        where: { id: userId, status: 'ACTIVE' },
+    });
+
+    if (!user) {
+        throw new AppError(httpStatus.NOT_FOUND, 'You are not authorized to access this resource');
+    }
+
+    const queryParams: any = {
+        ...query,
+        userId,
+        status: 'ACTIVE',
+    };
+
+    const productQuery = new QueryBuilder(prisma.product, queryParams);
+
+    const result = await productQuery.search(['title', 'description']).sort().paginate().filter().fields().execute();
+
+    return result;
 };
 
 const getSpecificUserProducts = async (me: string, specificUser: string, query: Record<string, any>) => {
@@ -325,4 +343,5 @@ export const ProductService = {
     updateProductInDB,
     getSpecificUserProducts,
     approveProduct,
+    getMyProductsFromDB,
 };

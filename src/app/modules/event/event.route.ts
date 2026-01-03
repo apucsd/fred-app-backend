@@ -13,7 +13,9 @@ router.post(
     validateRequest.body(EventValidation.createEventSchema),
     EventController.createEvent
 );
+
 router.get('/', auth('ANY'), EventController.getAllEvents);
+router.get('/my-events', auth(UserRoleEnum.BUSINESS), EventController.getMyEvents);
 router.get('/:id', auth('ANY'), EventController.getEventById);
 router.patch('/:id', auth(UserRoleEnum.BUSINESS), EventController.updateEvent);
 router.delete('/:id', auth(UserRoleEnum.BUSINESS), EventController.deleteEvent);

@@ -11,7 +11,17 @@ const createCategoryInDB = async (payload: ICategory) => {
 
 const getAllCategoriesFromDB = async (query: Record<string, any>) => {
     const categoryQuery = new QueryBuilder(prisma.category, { ...query, status: 'ACTIVE' });
-    const result = await categoryQuery.search(['title']).sort().filter().fields().paginate().execute();
+    const result = await categoryQuery
+        .search(['title'])
+        .sort()
+        .filter()
+        .fields()
+        .paginate()
+        .customFields({
+            id: true,
+            title: true,
+        })
+        .execute();
     return result;
 };
 

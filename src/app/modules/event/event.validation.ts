@@ -8,9 +8,11 @@ const createEventSchema = z.object({
         image: z.string({
             required_error: 'Image is required',
         }),
-        video: z.string({
-            required_error: 'Video is required',
-        }),
+        video: z
+            .string({
+                required_error: 'Video is required',
+            })
+            .optional(),
         eventDate: z
             .string({
                 required_error: 'Event date is required',

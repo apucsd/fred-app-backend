@@ -24,6 +24,12 @@ const getAllEventsFromDB = async (query: Record<string, any>) => {
     return result;
 };
 
+const myCreatedEvent = async (userId: string, query: Record<string, any>) => {
+    const musicQuery = new QueryBuilder(prisma.event, { ...query, userId });
+    const result = await musicQuery.search(['title', 'description']).sort().filter().fields().paginate().execute();
+    return result;
+};
+
 const getEventByIdFromDB = async (id: string) => {
     const result = await prisma.event.findUniqueOrThrow({
         where: {
@@ -70,4 +76,5 @@ export const EventService = {
     getEventByIdFromDB,
     updateEventInDB,
     deleteEventInDB,
+    myCreatedEvent,
 };

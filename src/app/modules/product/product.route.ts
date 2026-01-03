@@ -19,6 +19,7 @@ router.patch(
     validateRequest.body(ProductValidation.updateProductValidation),
     ProductController.updateProduct
 );
+router.get('/my-products', auth(UserRoleEnum.BUSINESS), ProductController.getMyProducts);
 router.patch('/approve/:id', auth(UserRoleEnum.SUPERADMIN), ProductController.approveProduct);
 
 router.get('/', auth('ANY'), ProductController.getAllProducts);
