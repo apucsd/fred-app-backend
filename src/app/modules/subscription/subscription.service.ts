@@ -43,11 +43,14 @@ const createSubscriptionPaymentLink = async (userId: string, packageId: string) 
     }
 
     const existingSubscription = await prisma.subscription.findUnique({
-        where: { userId_packageId: { userId, packageId } },
+        where: { userId: userId },
     });
 
     if (existingSubscription) {
-        throw new AppError(httpStatus.BAD_REQUEST, 'User already has a subscription for this package');
+        throw new AppError(
+            httpStatus.BAD_REQUEST,
+            'User already has a subscription. Please cancel the existing subscription first.'
+        );
     }
 
     const session = await stripe.checkout.sessions.create({

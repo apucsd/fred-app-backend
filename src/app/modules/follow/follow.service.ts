@@ -74,13 +74,49 @@ const getMyFollowingFromDB = async (userId: string, query: Record<string, any>) 
         .sort()
         .paginate()
         .fields()
-        .include({
-            following: true,
+        .customFields({
+            id: true,
+            followerId: true,
+            followingId: true,
+            createdAt: true,
+            updatedAt: true,
+            following: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    profile: true,
+                },
+            },
         });
 
     const result = await followingQuery.execute();
 
-    return result;
+    // Get average ratings for the users being followed
+    const reviews = await prisma.review.groupBy({
+        by: ['reviewedUserId'],
+        where: {
+            reviewedUserId: {
+                in: result.data.map((item: any) => item.followingId),
+            },
+        },
+        _avg: {
+            rating: true,
+        },
+    });
+
+    const dataWithRatings = result.data.map((item: any) => {
+        const rating = reviews.find((r: any) => r.reviewedUserId === item.followingId);
+        return {
+            ...item,
+            avgRating: rating?._avg?.rating || 0,
+        };
+    });
+
+    return {
+        ...result,
+        data: dataWithRatings,
+    };
 };
 
 export const FollowService = {

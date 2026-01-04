@@ -39,7 +39,7 @@ app.get('/', (req: Request, res: Response) => {
             name: 'Apu Sutra Dhar',
             role: 'Full Stack Developer / Backend Developer',
             location: 'Bangladesh',
-            portfolio: 'https://apusutradhar.vercel.app/',
+            portfolio: 'https://apusutradhar.vercel.app',
         },
 
         timestamp: new Date().toISOString(),
