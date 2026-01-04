@@ -42,8 +42,8 @@ const createSubscriptionPaymentLink = async (userId: string, packageId: string) 
         throw new AppError(httpStatus.BAD_REQUEST, 'User role does not match package type');
     }
 
-    const existingSubscription = await prisma.subscription.findUnique({
-        where: { userId: userId },
+    const existingSubscription = await prisma.subscription.findFirst({
+        where: { userId: userId, status: 'ACTIVE' },
     });
 
     if (existingSubscription) {
@@ -77,7 +77,7 @@ const createSubscriptionPaymentLink = async (userId: string, packageId: string) 
 
 const getMySubscriptionFromDB = async (userId: string) => {
     const isExistSubscription = await prisma.subscription.findMany({
-        where: { userId: userId },
+        where: { userId: userId, status: 'ACTIVE' },
         include: {
             package: true,
         },
@@ -87,17 +87,21 @@ const getMySubscriptionFromDB = async (userId: string) => {
 };
 
 const cancelSubscriptionFromStripe = async (userId: string, packageId: string) => {
-    const isExistSubscription = await prisma.subscription.findUnique({
-        where: { userId_packageId: { userId, packageId } },
+    const isExistSubscription = await prisma.subscription.findFirst({
+        where: {
+            userId,
+            packageId,
+            status: 'ACTIVE',
+        },
     });
 
+    console.log(isExistSubscription);
     if (!isExistSubscription) {
         throw new AppError(httpStatus.BAD_REQUEST, 'User does not have a subscription with this package');
     }
+    await stripe.subscriptions.cancel(isExistSubscription.stripeSubscriptionId);
 
-    const result = await stripe.subscriptions.cancel(isExistSubscription.stripeSubscriptionId);
-
-    return result;
+    return null;
 };
 
 const upgradeSubscriptionFromStripeBilling = async (userId: string) => {

@@ -211,7 +211,7 @@ const handleSubscriptionUpdated = async (
 const handleSubscriptionDeleted = async (subscription: Stripe.Subscription) => {
     const stripeSubId = subscription.id;
 
-    const existingSub = await prisma.subscription.findUnique({
+    const existingSub = await prisma.subscription.findFirst({
         where: { stripeSubscriptionId: stripeSubId },
     });
 
