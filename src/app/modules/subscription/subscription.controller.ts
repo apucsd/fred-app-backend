@@ -33,19 +33,19 @@ const cancelSubscriptionFromStripe = catchAsync(async (req, res) => {
     });
 });
 
-const upgradeSubscription = catchAsync(async (req, res) => {
-    const result = await SubscriptionService.upgradeSubscriptionFromStripeBilling(req.user.id);
-    sendResponse(res, {
-        success: true,
-        statusCode: httpStatus.OK,
-        message: 'Subscription billing portal opened successfully',
-        data: result,
-    });
-});
+// const upgradeSubscription = catchAsync(async (req, res) => {
+//     const result = await SubscriptionService.upgradeSubscriptionFromStripeBilling(req.user.id);
+//     sendResponse(res, {
+//         success: true,
+//         statusCode: httpStatus.OK,
+//         message: 'Subscription billing portal opened successfully',
+//         data: result,
+//     });
+// });
 
 export const SubscriptionController = {
     createSubscriptionPaymentLink,
     cancelSubscriptionFromStripe,
-    upgradeSubscription,
+    // upgradeSubscription,
     getMySubscription,
 };
