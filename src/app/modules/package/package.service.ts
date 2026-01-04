@@ -44,14 +44,36 @@ const createPackageInToDB = async (payload: IPackage) => {
     });
     return result;
 };
-const getAllPackagesFromDB = async (role: UserRoleEnum) => {
+const getAllPackagesFromDB = async (userId: string) => {
+    const user = await prisma.user.findUnique({
+        where: {
+            id: userId,
+            status: 'ACTIVE',
+        },
+    });
+    if (!user) {
+        throw new AppError(httpStatus.NOT_FOUND, 'User not found');
+    }
+    const myActivePlan = await prisma.subscription.findFirst({
+        where: {
+            userId,
+            status: 'ACTIVE',
+        },
+    });
+
     const result = await prisma.package.findMany({
         where: {
             status: 'ACTIVE',
-            type: role,
+            type: user?.role,
         },
     });
-    return result;
+
+    const packages = result.map((pkg) => ({
+        ...pkg,
+        isActivePlan: myActivePlan?.packageId === pkg.id,
+    }));
+
+    return packages;
 };
 const getAdminAllPackagesFromDB = async (query: Record<string, string>) => {
     let whereCondition: any = {

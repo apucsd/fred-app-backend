@@ -279,6 +279,15 @@ const getSingleProductFromDB = async (me: string, id: string) => {
 
     const discountPercent = user.role === 'USER' ? (subscription?.package?.discountPercent ?? 0) : 0;
 
+    const isWishlisted = await prisma.wishlist.findUnique({
+        where: {
+            userId_productId: {
+                userId: me,
+                productId: id,
+            },
+        },
+    });
+
     const result = await prisma.product.findUniqueOrThrow({
         where: {
             id,
@@ -308,6 +317,7 @@ const getSingleProductFromDB = async (me: string, id: string) => {
         price,
         discountPercent,
         discountedPrice: Number(discountedPrice.toFixed(2)),
+        isWishlisted: !!isWishlisted,
     };
 };
 

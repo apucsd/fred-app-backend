@@ -67,7 +67,9 @@ const createSubscriptionPaymentLink = async (userId: string, packageId: string) 
         cancel_url: `${config.base_url_client}/subscription/cancel`,
     });
 
-    return session.url;
+    return {
+        paymentUrl: session.url,
+    };
 };
 
 const getMySubscriptionFromDB = async (userId: string) => {
